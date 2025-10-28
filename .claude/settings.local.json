@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python visualize_grids.py:*)",
+      "Bash(mv:*)",
+      "Bash(python:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker inspect:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

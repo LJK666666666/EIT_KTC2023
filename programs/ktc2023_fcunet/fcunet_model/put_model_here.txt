@@ -1,0 +1,4 @@
+The path to the model should be:
+
+
+fcunet_model/model.pt

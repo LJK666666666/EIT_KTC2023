@@ -1,0 +1,3 @@
+Full path to the model weights should be 
+
+postprocessing_model/version_01/model.pt

@@ -1,0 +1,185 @@
+function score = scoringFunction(truth, reco)
+
+
+    if any(size(truth) ~= [256 256]) 
+        error('The shape of the given ground truth is not 256 x 256!');
+    end
+    if any(size(reco) ~= [256 256])
+        score = 0;
+        warning('The shape of the reconstruction is not 256 x 256, so 0 points was given!');
+        return;
+    end
+    r = 80;
+
+    truth_c = zeros(size());
+    truth_c(truth_c == 1) = 0;
+    reco_c = reco;
+    reco_c(reco_c == 1) = 0;
+    
+    score_c = ssim(reco_c, truth_c, 'Radius', r);
+
+    truth_d = truth;
+    truth_d(truth_d == 2) = 0;
+    reco_d = reco;
+    reco_d(reco_d == 2) = 0;
+    
+    score_d = ssim(reco_d, truth_d, 'Radius', r);
+    
+
+    score = 0.5*(score_c + score_d);
+
+    
+   
+end
+
+function seg = floodfill(im, startp)
+
+    val = im(startp(1), startp(2));
+    [imr, imc] = size(im);
+
+    sp = zeros(numel(im),2);
+    sp(1,:) = [startp(1) startp(2)];
+    spi = 1;
+    sci = 0;
+    seg = zeros(size(im));
+    onstack = zeros(size(im));
+
+
+    while spi > sci
+
+        sci = sci + 1;
+        if im(sp(sci,1), sp(sci,2)) == val
+            
+            seg(sp(sci,1), sp(sci,2)) = 1;
+            if sp(sci,1)+1 <= imr && ~onstack(sp(sci,1)+1, sp(sci,2))
+                spi = spi + 1;
+                sp(spi,:) = [sp(sci,1)+1 sp(sci,2)];
+                onstack(sp(sci,1)+1, sp(sci,2)) = 1;
+            end
+            if sp(sci,2)+1 <= imc && ~onstack(sp(sci,1), sp(sci,2)+1)
+                spi = spi + 1;
+                sp(spi,:) = [sp(sci,1) sp(sci,2)+1];
+                onstack(sp(sci,1), sp(sci,2)+1) = 1;
+            end
+            if sp(sci,1)-1 > 0 && ~onstack(sp(sci,1)-1, sp(sci,2))
+                spi = spi + 1;
+                sp(spi,:) = [sp(sci,1)-1 sp(sci,2)];
+                onstack(sp(sci,1)-1, sp(sci,2)) = 1;
+            end
+            if sp(sci,2)-1 > 0 && ~onstack(sp(sci,1), sp(sci,2)-1)
+                spi = spi + 1;
+                sp(spi,:) = [sp(sci,1) sp(sci,2)-1];
+                onstack(sp(sci,1), sp(sci,2)-1) = 1;
+            end
+
+        end
+
+    end
+
+
+end
+
+function res = GetPartitionsRecursively(n)
+
+    if n == 1
+        res = cell(1);
+        res{1} = {1};
+    else
+        temp = GetPartitionsRecursively(n-1);
+        num = 0;
+        for it = 1:length(temp)
+            num = num + length(temp{it}) + 1;
+        end
+        res = cell(num,1);
+        ir = 1;
+        for it = 1:length(temp)
+            for ii = 1:length(temp{it})
+                res{ir} = temp{it};
+                res{ir}{ii} = [res{ir}{ii}; n];
+                ir = ir + 1;
+            end
+            res{ir} = temp{it};
+            res{ir}{length(res{ir})+1} = n;
+            ir = ir + 1;
+        end
+    end
+
+
+end
+
+function score = Score_ConfusionMatrix(truth, reco, nc)
+%This function calculates a confusion matrix based score for the
+%reconstruction "reco", comparing it to ground truth "truth". "nc" is the
+%number of different classes of pixels, i.e. the number of different values
+%the pixels have.
+%
+%The scoring is based on generalized Matthews correlation coefficient:
+%https://en.wikipedia.org/wiki/Phi_coefficient
+%The notations are almost similar to the ones used in the Wikipedia article
+    
+    if any(size(truth) ~= size(reco))
+        error('The ground truth and reconstruction have different sizes!');
+    end
+
+    np = numel(truth);%number of pixels
+    vtruth = truth(:);%make vectors of the images
+    vreco = reco(:);
+    tk = zeros(nc,1);%tk, pk and c are as in the Wikpedia article
+    pk = zeros(nc,1);
+    c = 0;
+    for ip = 1:np
+        tk(vtruth(ip)+1) = tk(vtruth(ip)+1) + 1;
+        pk(vreco(ip)+1) = pk(vreco(ip)+1) + 1;
+        if vtruth(ip) == vreco(ip)
+            c = c + 1;
+        end
+    end
+    
+    if c*np - sum(tk.*pk) == 0%This results in 0/0, so assign a zero score separately.
+        score = 0;
+    else
+        score = (c*np - sum(tk.*pk))/(sqrt((np^2 - sum(pk.^2))*(np^2 - sum(tk.^2))));
+    end
+
+
+end
+
+function [sh, p, m] = SegmentShapes(im)
+    %This function segments the inclusions in im, which is assumed to have
+    %values 0 for background and 1 for inclusions.
+    %Output:
+    %sh is a cell array containing image of each inclusion in its original
+    %           location
+    %p  is a n x 2 matrix containing at each row the x and y coordinates of
+    %   the center of mass of the inclusion
+    %m  is a vector containing the total "mass", i.e. the number of pixels,
+    %   in each inclusion
+
+
+    sh = cell(1,1);
+    p  = zeros(1,2);
+    m = zeros(1,1);
+    ish = 1;
+    for ii = 1:size(im,1)%go through all the pixels
+        for ij = 1:size(im,2)
+            if im(ii,ij) %check if the pixel has value 1
+                tim = floodfill(im, [ii ij]);%find all the pixels connected to this one. This is a basic 4-way floodfill.
+                sh{ish} = tim;%this is the shape of the inclusion
+                m(ish) = sum(tim(:));
+                [ri, ci] = find(tim);
+                p(ish,:) = [mean(ri) mean(ci)];%this is the center of mass of the inclusion
+                im(tim==1) = 0;%remove the inclusion, so that it is not found again.
+                ish = ish + 1;%inclusion counter
+            end
+        end
+    end
+
+
+
+end
+
+
+
+
+
+

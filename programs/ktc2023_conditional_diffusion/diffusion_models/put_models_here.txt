@@ -1,0 +1,5 @@
+The path to the models should be 
+
+diffusion_models/level_1/version_01/model.pt
+diffusion_models/level_2/version_01/model.pt
+...
