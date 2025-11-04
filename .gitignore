@@ -1,1 +1,5 @@
 backup/
+*.npy
+*.pt
+*.npz
+*.pth

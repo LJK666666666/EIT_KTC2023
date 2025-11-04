@@ -87,8 +87,8 @@ def solve(inputData, categoryNbr):
     NET_TYPE = 'skip'  # 网络类型（跳跃连接）
     LR = 3.5e-3  # 学习率
     reg_noise_std = 0.04  # 正则化噪声标准差
-    # num_iter=3000  # 迭代次数
-    num_iter=500  # 迭代次数
+    num_iter=3000  # 迭代次数
+    # num_iter=500  # 迭代次数
     w_tv = 5e-8  # 总变差权重
     tv = TotalVariation().to(map_location)  # 总变差计算器
 

@@ -1,0 +1,18 @@
+{
+    "exp_name": "eit_reconstruction",
+    "model_name": "unet",
+    "input_dim": 2356,
+    "data_path": "SimData/level_1",
+    "num_samples": null,
+    "train_split": 0.9,
+    "batch_size": 128,
+    "epochs": 1000,
+    "learning_rate": 0.001,
+    "weight_decay": 1e-05,
+    "weight_ce": 1.0,
+    "weight_dice": 1.0,
+    "patience": 3,
+    "early_stopping": 20,
+    "save_interval": 30,
+    "num_workers": 2
+}
