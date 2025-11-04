@@ -9,3 +9,6 @@ build/
 *.pt
 *.npz
 *.pth
+
+GUIDE/
+test/
