@@ -5,7 +5,9 @@
       "Bash(mv:*)",
       "Bash(python:*)",
       "Bash(docker exec:*)",
-      "Bash(docker inspect:*)"
+      "Bash(docker inspect:*)",
+      "Bash(tee:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
