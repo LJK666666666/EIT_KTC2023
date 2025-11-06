@@ -1,4 +1,0 @@
-file_id,score,groundtruth_path,reconstruction_path
-1,0.02695081472895513,D:\010_CodePrograms\E\EIT_KTC2023\EvaluationData\GroundTruths\level_7\1_true.mat,D:\010_CodePrograms\E\EIT_KTC2023\Codes_Python\results\level7\1.mat
-2,0.19803167998838145,D:\010_CodePrograms\E\EIT_KTC2023\EvaluationData\GroundTruths\level_7\2_true.mat,D:\010_CodePrograms\E\EIT_KTC2023\Codes_Python\results\level7\2.mat
-3,0.7014436850709659,D:\010_CodePrograms\E\EIT_KTC2023\EvaluationData\GroundTruths\level_7\3_true.mat,D:\010_CodePrograms\E\EIT_KTC2023\Codes_Python\results\level7\3.mat

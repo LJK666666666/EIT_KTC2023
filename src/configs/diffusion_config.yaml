@@ -1,0 +1,56 @@
+# Diffusion 方法配置（基于 DiT）
+
+data:
+  data_dir: 'data'
+  batch_size: 8
+  num_workers: 4
+  pin_memory: true
+  use_eim: true  # 使用EIM格式（16x16），CDEIT需要
+
+training:
+  num_epochs: 500
+  save_every: 50
+  device: 'cuda'
+
+optimizer:
+  type: 'adam'
+  lr: 0.0001
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: 'reduce_on_plateau'
+  mode: 'min'
+  factor: 0.5
+  patience: 20
+
+results:
+  base_dir: 'results'
+  method_name: 'diffusion_dit'
+
+# Diffusion 模型配置
+model:
+  type: 'dit'
+
+  # DiT 架构参数
+  input_size: 128       # 输入图像大小
+  patch_size: 2         # Patch 大小（CDEIT使用2）
+  in_channels: 2        # 输入通道数（1个噪声图像 + 1个条件图像）
+  hidden_size: 512      # 隐藏层维度（CDEIT使用512）
+  depth: 12             # Transformer 层数（DiT模型内部固定，此参数不使用）
+  num_heads: 8          # 注意力头数（CDEIT使用8）
+  mlp_ratio: 4.0        # MLP 扩展比例（DiT模型内部固定，此参数不使用）
+
+  # 条件信息
+  condition_dim: 256    # 条件向量维度（测量数据维度）
+
+  # Diffusion 参数
+  num_timesteps: 1000   # 扩散步数
+  beta_schedule: 'linear'  # 'linear', 'cosine', 'quadratic'
+  beta_start: 0.0001
+  beta_end: 0.02
+
+# 推理配置
+inference:
+  num_sampling_steps: 50  # DDIM 采样步数
+  eta: 0.0                # DDIM eta 参数

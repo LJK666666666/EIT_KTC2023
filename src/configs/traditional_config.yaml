@@ -1,0 +1,31 @@
+# Traditional 传统方法配置
+
+data:
+  data_dir: 'data'
+  batch_size: 1  # 传统方法通常逐个处理
+  num_workers: 0
+  pin_memory: false
+
+training:
+  num_epochs: 1  # 传统方法无需训练
+  save_every: 1
+  device: 'cpu'
+
+results:
+  base_dir: 'results'
+  method_name: 'traditional_tikhonov'
+
+# 传统方法配置
+method:
+  type: 'tikhonov'  # 'tikhonov', 'tv', 'gauss_newton'
+
+  # Tikhonov 正则化参数
+  alpha: 0.01       # 正则化参数
+  max_iter: 100     # 最大迭代次数
+  tolerance: 1e-6   # 收敛容差
+
+# KTC 相关配置
+ktc:
+  mesh_file: 'Mesh_dense.mat'
+  nel: 32           # 电极数量
+  z: 0.01           # 接触阻抗

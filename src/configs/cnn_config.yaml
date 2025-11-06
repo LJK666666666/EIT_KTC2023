@@ -1,0 +1,39 @@
+# CNN 方法配置（基于 UNet）
+
+# 继承基础配置
+data:
+  data_dir: 'data'
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+  use_eim: true   # CNN改为使用EIM格式（物理上更合理）
+
+training:
+  num_epochs: 200
+  save_every: 20
+  device: 'cuda'
+
+optimizer:
+  type: 'adam'
+  lr: 0.0001
+  weight_decay: 0.00001
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: 'reduce_on_plateau'
+  mode: 'min'
+  factor: 0.5
+  patience: 15
+
+results:
+  base_dir: 'results'
+  method_name: 'cnn_unet'
+
+# CNN 模型配置
+model:
+  type: 'unet'
+  input_channels: 1     # 输入通道数
+  output_channels: 1    # 输出通道数
+  base_channels: 64     # 基础通道数
+  num_layers: 4         # U-Net 层数
+  dropout: 0.1          # Dropout 率

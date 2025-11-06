@@ -1,0 +1,41 @@
+# 基础配置模板
+# 所有方法的通用配置
+
+# 数据配置
+data:
+  data_dir: 'data'
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+# 训练配置
+training:
+  num_epochs: 100
+  save_every: 10
+  device: 'cuda'  # 'cuda', 'cpu', 'tpu'
+
+# 优化器配置
+optimizer:
+  type: 'adam'  # 'adam', 'sgd'
+  lr: 0.001
+  weight_decay: 0.0
+  # SGD 专用参数
+  momentum: 0.9
+  # Adam 专用参数
+  betas: [0.9, 0.999]
+
+# 学习率调度器配置
+scheduler:
+  type: 'reduce_on_plateau'  # 'reduce_on_plateau', 'step', null
+  # ReduceLROnPlateau 参数
+  mode: 'min'
+  factor: 0.5
+  patience: 10
+  # StepLR 参数
+  step_size: 30
+  gamma: 0.1
+
+# 结果保存配置
+results:
+  base_dir: 'results'
+  method_name: 'base_method'

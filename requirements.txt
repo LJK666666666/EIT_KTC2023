@@ -81,8 +81,15 @@ sympy==1.1.1
 terminado==0.8.3
 testpath==0.4.4
 tifffile==2020.9.3
-torch==1.10.2
+torch>=2.0.0
+torchvision>=0.15.0
 torchmetrics==0.8.2
+
+# Additional requirements for new framework
+pyyaml>=6.0
+tqdm>=4.65.0
+timm>=0.9.0
+einops>=0.6.0
 tornado==6.0.3
 traitlets==4.3.3
 typing_extensions==4.1.1

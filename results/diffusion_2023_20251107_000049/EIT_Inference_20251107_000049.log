@@ -1,0 +1,41 @@
+2025-11-07 00:00:49 - EIT_Inference - INFO - Output directory: results\diffusion_2023_20251107_000049
+2025-11-07 00:00:49 - EIT_Inference - INFO - Inference method: diffusion
+2025-11-07 00:00:49 - EIT_Inference - INFO - Checkpoint: CDEIT/official/best.pt
+2025-11-07 00:00:49 - EIT_Inference - INFO - Dataset: test2023
+2025-11-07 00:00:49 - EIT_Inference - INFO - Setting up data module...
+2025-11-07 00:00:49 - EIT_Inference - INFO - Dataset size: 25
+2025-11-07 00:00:49 - EIT_Inference - INFO - Creating diffusion method...
+2025-11-07 00:00:55 - EIT_Inference - INFO - Loading checkpoint from: CDEIT/official/best.pt
+2025-11-07 00:00:55 - EIT_Inference - INFO - Starting inference...
+2025-11-07 00:00:58 - EIT_Inference - INFO - Processing: 0_1.npz -> reconstruction_0_1
+2025-11-07 00:01:01 - EIT_Inference - INFO - Processing: 0_2.npz -> reconstruction_0_2
+2025-11-07 00:01:03 - EIT_Inference - INFO - Processing: 0_3.npz -> reconstruction_0_3
+2025-11-07 00:01:06 - EIT_Inference - INFO - Processing: 0_4.npz -> reconstruction_0_4
+2025-11-07 00:01:09 - EIT_Inference - INFO - Processing: 1_1.npz -> reconstruction_1_1
+2025-11-07 00:01:11 - EIT_Inference - INFO - Processing: 1_2.npz -> reconstruction_1_2
+2025-11-07 00:01:14 - EIT_Inference - INFO - Processing: 1_3.npz -> reconstruction_1_3
+2025-11-07 00:01:17 - EIT_Inference - INFO - Processing: 2_1.npz -> reconstruction_2_1
+2025-11-07 00:01:20 - EIT_Inference - INFO - Processing: 2_2.npz -> reconstruction_2_2
+2025-11-07 00:01:23 - EIT_Inference - INFO - Processing: 2_3.npz -> reconstruction_2_3
+2025-11-07 00:01:25 - EIT_Inference - INFO - Processing: 3_1.npz -> reconstruction_3_1
+2025-11-07 00:01:28 - EIT_Inference - INFO - Processing: 3_2.npz -> reconstruction_3_2
+2025-11-07 00:01:30 - EIT_Inference - INFO - Processing: 3_3.npz -> reconstruction_3_3
+2025-11-07 00:01:33 - EIT_Inference - INFO - Processing: 4_1.npz -> reconstruction_4_1
+2025-11-07 00:01:36 - EIT_Inference - INFO - Processing: 4_2.npz -> reconstruction_4_2
+2025-11-07 00:01:39 - EIT_Inference - INFO - Processing: 4_3.npz -> reconstruction_4_3
+2025-11-07 00:01:42 - EIT_Inference - INFO - Processing: 5_1.npz -> reconstruction_5_1
+2025-11-07 00:01:45 - EIT_Inference - INFO - Processing: 5_2.npz -> reconstruction_5_2
+2025-11-07 00:01:48 - EIT_Inference - INFO - Processing: 5_3.npz -> reconstruction_5_3
+2025-11-07 00:01:50 - EIT_Inference - INFO - Processing: 6_1.npz -> reconstruction_6_1
+2025-11-07 00:01:53 - EIT_Inference - INFO - Processing: 6_2.npz -> reconstruction_6_2
+2025-11-07 00:01:56 - EIT_Inference - INFO - Processing: 6_3.npz -> reconstruction_6_3
+2025-11-07 00:01:58 - EIT_Inference - INFO - Processing: 7_1.npz -> reconstruction_7_1
+2025-11-07 00:02:01 - EIT_Inference - INFO - Processing: 7_2.npz -> reconstruction_7_2
+2025-11-07 00:02:04 - EIT_Inference - INFO - Processing: 7_3.npz -> reconstruction_7_3
+2025-11-07 00:02:04 - EIT_Inference - INFO - Average metrics:
+2025-11-07 00:02:04 - EIT_Inference - INFO -   mse: 0.084239
+2025-11-07 00:02:04 - EIT_Inference - INFO -   mae: 0.096541
+2025-11-07 00:02:04 - EIT_Inference - INFO -   psnr: 11.669303
+2025-11-07 00:02:04 - EIT_Inference - INFO -   ssim: 0.763187
+2025-11-07 00:02:04 - EIT_Inference - INFO -   relative_error: 0.977289
+2025-11-07 00:02:04 - EIT_Inference - INFO - Inference completed! Results saved to: results\diffusion_2023_20251107_000049

@@ -1,0 +1,6 @@
+{
+  "num_epochs": 2,
+  "save_every": 20,
+  "device": "cuda",
+  "method_name": "cnn"
+}

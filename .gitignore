@@ -7,8 +7,14 @@ dist/
 build/
 *.npy
 *.pt
-*.npz
+# *.npz
 *.pth
 
 GUIDE/
 test/
+
+data/train/
+data/valid/
+data/test/
+
+*.p

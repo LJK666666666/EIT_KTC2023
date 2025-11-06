@@ -1,0 +1,37 @@
+# CNN 方法配置（基于论文的CNN-EIM架构）
+# 使用EIM格式 (16×16)
+# 输出 64×64（论文改进版）
+
+data:
+  data_dir: 'data'
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+  use_eim: true  # 使用EIM格式（物理上更合理）
+
+training:
+  num_epochs: 200
+  save_every: 20
+  device: 'cuda'
+
+optimizer:
+  type: 'adam'
+  lr: 0.0001
+  weight_decay: 0.00001
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: 'reduce_on_plateau'
+  mode: 'min'
+  factor: 0.5
+  patience: 15
+
+results:
+  base_dir: 'results'
+  method_name: 'cnn_paper_eim'
+
+# CNN 模型配置 - 使用论文中的CNN-EIM架构
+model:
+  type: 'paper_cnn_eim'      # 使用论文的架构而不是通用UNet
+  output_size: 64             # 输出尺寸: 64×64（改进版）
+                              # 也可以设为 32（原论文）
