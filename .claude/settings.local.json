@@ -28,7 +28,8 @@
       "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" src/inference.py --method diffusion --checkpoint CDEIT/official/best.pt --dataset test2023 --batch_size 1 --output_dir test_inference_naming)",
       "Bash(xargs basename:*)",
       "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" src/inference.py --method diffusion --checkpoint CDEIT/official/best.pt --dataset test2023 --batch_size 5 --output_dir test_batch5)",
-      "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" main.py inference --help)"
+      "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" main.py inference --help)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

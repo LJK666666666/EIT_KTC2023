@@ -18,7 +18,9 @@ class EITDataset(Dataset):
         Args:
             data_dir: 数据根目录
             dataset_type: 数据集类型 ('train', 'valid', 'test', 'test2017', 'test2023')
-            use_eim: 是否使用EIM格式（CDEIT需要），否则使用上采样到128x128（CNN等方法）
+            use_eim: 是否使用EIM格式
+                    - True: 转换为EIM格式 [1, 16, 16] (用于CDEIT等)
+                    - False: 保持原始格式 [1, 16, 13] (用于PyDbar等传统方法)
         """
         self.data_dir = Path(data_dir)
         self.dataset_type = dataset_type
@@ -116,8 +118,8 @@ class EITDataset(Dataset):
         """
         Returns:
             measurements: 测量数据
-                - 如果use_eim=True: [1, 16, 16] EIM格式 (CDEIT)
-                - 如果use_eim=False: [1, 128, 128] 上采样格式 (CNN)
+                - 如果use_eim=True: [1, 16, 16] EIM格式
+                - 如果use_eim=False: [1, 16, 13] 原始电压格式
             conductivity: 电导率图像 [1, 128, 128] (如果存在)
         """
         file_path = self.data_files[idx]
@@ -163,17 +165,10 @@ class EITDataset(Dataset):
             measurements = measurements.unsqueeze(0)
 
             if self.use_eim:
-                # CDEIT流程: 归一化 -> 转换为EIM
+                # EIM格式: 归一化 -> 转换为EIM [1, 16, 16]
                 measurements = self.normalize(measurements)  # [1, 16, 13]
                 measurements = self.to_eim(measurements)      # [1, 16, 16]
-            else:
-                # CNN流程: 上采样到128x128
-                measurements = torch.nn.functional.interpolate(
-                    measurements.unsqueeze(0),  # [1, 1, 16, 13]
-                    size=(128, 128),
-                    mode='bilinear',
-                    align_corners=True
-                ).squeeze(0)  # [1, 128, 128]
+            # 否则保持原始格式 [1, 16, 13]，不做任何处理
 
         # 处理电导率数据
         if conductivity is not None:

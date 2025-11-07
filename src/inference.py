@@ -28,7 +28,7 @@ def parse_args():
         '--method',
         type=str,
         required=True,
-        choices=['cnn', 'diffusion', 'traditional'],
+        choices=['cnn', 'diffusion', 'traditional', 'deepdbar', 'pydbar'],
         help='Reconstruction method to use'
     )
 

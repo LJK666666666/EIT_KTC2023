@@ -1,0 +1,41 @@
+# DeepDbar 方法配置
+# 基于 Hamilton & Hauptmann (2018)
+# Deep D-bar: Real time Electrical Impedance Tomography Imaging with Deep Neural Networks
+
+# 数据配置
+data:
+  data_dir: 'data'
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+  use_eim: true   # DeepDbar使用EIM格式输入
+
+# 训练配置
+training:
+  num_epochs: 200
+  save_every: 20
+  device: 'cuda'
+
+# 优化器配置
+optimizer:
+  type: 'adam'
+  lr: 0.001      # DeepDbar 论文中使用较大的学习率
+  weight_decay: 0.00001
+  betas: [0.9, 0.999]
+
+# 学习率调度器配置
+scheduler:
+  type: 'reduce_on_plateau'
+  mode: 'min'
+  factor: 0.5
+  patience: 15
+
+# 结果保存配置
+results:
+  base_dir: 'results'
+  method_name: 'deepdbar'
+
+# DeepDbar 模型配置
+model:
+  input_channels: 1     # 输入通道数（固定为1）
+  # DeepDbar 输出固定为 64×64

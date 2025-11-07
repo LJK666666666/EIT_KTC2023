@@ -1,0 +1,9 @@
+2025-11-07 16:22:31 - EIT_Inference - INFO - Output directory: results/inference_pydbar_test2023_20251107_162231
+2025-11-07 16:22:31 - EIT_Inference - INFO - Inference method: pydbar
+2025-11-07 16:22:31 - EIT_Inference - INFO - Checkpoint: none
+2025-11-07 16:22:31 - EIT_Inference - INFO - Dataset: test2023
+2025-11-07 16:22:31 - EIT_Inference - INFO - Setting up data module...
+2025-11-07 16:22:31 - EIT_Inference - INFO - Dataset size: 25
+2025-11-07 16:22:31 - EIT_Inference - INFO - Creating pydbar method...
+2025-11-07 16:22:32 - EIT_Inference - INFO - Loading checkpoint from: none
+2025-11-07 16:22:32 - EIT_Inference - INFO - Starting inference...

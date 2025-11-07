@@ -11,7 +11,7 @@ def create_method(method_type: str, config: Dict) -> BaseReconstructionMethod:
     创建重建方法实例（工厂模式）
 
     Args:
-        method_type: 方法类型 ('cnn', 'diffusion', 'traditional')
+        method_type: 方法类型 ('cnn', 'diffusion', 'traditional', 'deepdbar', 'pydbar')
         config: 配置字典
 
     Returns:
@@ -31,6 +31,14 @@ def create_method(method_type: str, config: Dict) -> BaseReconstructionMethod:
     elif method_type == 'traditional':
         from .traditional import create_traditional_method
         return create_traditional_method(config)
+
+    elif method_type == 'deepdbar':
+        from .deepdbar import create_deepdbar_method
+        return create_deepdbar_method(config)
+
+    elif method_type == 'pydbar':
+        from .pydbar import create_pydbar_method
+        return create_pydbar_method(config)
 
     else:
         raise ValueError(f"Unknown method type: {method_type}")

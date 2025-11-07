@@ -2,6 +2,34 @@
 
 统一的电阻抗层析成像(EIT)重建框架，支持多种重建方法。
 
+## 快速开始
+
+### 安装依赖
+
+### 训练模型
+
+#### CNN 方法
+```bash
+python main.py train --method cnn --num_epochs 200 --result_dir cnn --batch_size 128
+```
+
+#### Diffusion 方法
+```bash
+python main.py train --method diffusion --num_epochs 200 --result_dir diffusion --batch_size 128
+```
+
+### 推理
+
+#### CNN 方法
+```bash
+python main.py inference --method cnn --num_epochs 200 --result_dir cnn --batch_size 128
+```
+
+#### Diffusion 方法
+```bash
+python main.py inference --method diffusion --num_epochs 200 --result_dir diffusion --batch_size 128
+```
+
 ## 项目结构
 
 ```
@@ -55,53 +83,6 @@
 传统 Tikhonov 正则化方法
 - 配置文件: `src/configs/traditional_config.yaml`
 - 特点: 无需训练，直接推理
-
-## 快速开始
-
-### 安装依赖
-
-```bash
-pip install torch torchvision
-pip install numpy scipy matplotlib scikit-image
-pip install pyyaml tqdm
-pip install timm einops  # for Diffusion model
-```
-
-### 训练模型
-
-#### CNN 方法
-```bash
-python -m src.train --method cnn --data_dir data --num_epochs 200
-```
-
-或者在项目根目录使用：
-```bash
-python src/train.py --method cnn --data_dir data --num_epochs 200
-```
-
-#### Diffusion 方法
-```bash
-python -m src.train --method diffusion --data_dir data --num_epochs 500
-```
-
-### 推理
-
-```bash
-python -m src.inference \
-    --method cnn \
-    --checkpoint results/cnn_unet_20240101_120000/best_model.pth \
-    --dataset test \
-    --output_dir results/inference_cnn
-```
-
-或者：
-```bash
-python src/inference.py \
-    --method cnn \
-    --checkpoint results/cnn_unet_20240101_120000/best_model.pth \
-    --dataset test \
-    --output_dir results/inference_cnn
-```
 
 ## 配置文件说明
 
