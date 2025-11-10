@@ -36,9 +36,9 @@ def create_method(method_type: str, config: Dict) -> BaseReconstructionMethod:
         from .deepdbar import create_deepdbar_method
         return create_deepdbar_method(config)
 
-    elif method_type == 'pydbar':
-        from .pydbar import create_pydbar_method
-        return create_pydbar_method(config)
+    # elif method_type == 'pydbar':
+    #     from .pydbar import create_pydbar_method
+    #     return create_pydbar_method(config)
 
     else:
         raise ValueError(f"Unknown method type: {method_type}")

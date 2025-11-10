@@ -127,7 +127,13 @@ class EITDataset(Dataset):
         if self.file_format == 'npz':
             data = np.load(file_path)
             # NPZ 格式: ys=measurements, xs=conductivity
-            measurements = data['ys'][:, 0] / self.voltage  # (208,) 并归一化voltage
+            if self.use_eim:
+                # EIM 格式需要归一化：除以 voltage 系数
+                measurements = data['ys'][:, 0] / self.voltage  # (208,)
+            else:
+                # 传统方法（如 PyDbar）使用原始电压差值，不除以 voltage
+                measurements = data['ys'][:, 0]  # (208,) 保持原始范围
+
             if 'xs' in data:
                 conductivity = data['xs']  # (128, 128)
             else:
@@ -135,7 +141,11 @@ class EITDataset(Dataset):
         else:
             data = sio.loadmat(str(file_path))
             # MAT 格式
-            measurements = data['measurements'].flatten() / self.voltage
+            if self.use_eim:
+                measurements = data['measurements'].flatten() / self.voltage
+            else:
+                measurements = data['measurements'].flatten()
+
             if 'conductivity' in data:
                 conductivity = data['conductivity']
             else:

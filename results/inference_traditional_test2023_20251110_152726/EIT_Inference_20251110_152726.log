@@ -1,0 +1,23 @@
+2025-11-10 15:27:26 - EIT_Inference - INFO - Output directory: results/inference_traditional_test2023_20251110_152726
+2025-11-10 15:27:26 - EIT_Inference - INFO - Inference method: traditional
+2025-11-10 15:27:26 - EIT_Inference - INFO - Checkpoint: none
+2025-11-10 15:27:26 - EIT_Inference - INFO - Dataset: test2023
+2025-11-10 15:27:26 - EIT_Inference - INFO - Setting up data module...
+2025-11-10 15:27:26 - EIT_Inference - INFO - Dataset size: 25
+2025-11-10 15:27:26 - EIT_Inference - INFO - Creating traditional method...
+2025-11-10 15:28:20 - EIT_Inference - INFO - Traditional method does not require checkpoint
+2025-11-10 15:28:20 - EIT_Inference - INFO - Starting inference...
+2025-11-10 15:28:20 - EIT_Inference - INFO - Traditional 方法：直接从 .mat 文件加载并重建
+2025-11-10 15:28:41 - EIT_Inference - INFO - Processing reconstruction 1/3
+2025-11-10 15:28:41 - EIT_Inference - INFO - Loaded ground truth from 1_true.mat
+2025-11-10 15:28:42 - EIT_Inference - INFO - Processing reconstruction 2/3
+2025-11-10 15:28:42 - EIT_Inference - INFO - Loaded ground truth from 2_true.mat
+2025-11-10 15:28:42 - EIT_Inference - INFO - Processing reconstruction 3/3
+2025-11-10 15:28:42 - EIT_Inference - INFO - Loaded ground truth from 3_true.mat
+2025-11-10 15:28:43 - EIT_Inference - INFO - Average metrics:
+2025-11-10 15:28:43 - EIT_Inference - INFO -   mse: 0.710509
+2025-11-10 15:28:43 - EIT_Inference - INFO -   mae: 0.357734
+2025-11-10 15:28:43 - EIT_Inference - INFO -   psnr: 1.566447
+2025-11-10 15:28:43 - EIT_Inference - INFO -   ssim: 0.328548
+2025-11-10 15:28:43 - EIT_Inference - INFO -   relative_error: 2.764087
+2025-11-10 15:28:43 - EIT_Inference - INFO - Inference completed! Results saved to: results/inference_traditional_test2023_20251110_152726

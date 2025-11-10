@@ -26,6 +26,7 @@ method:
 
 # KTC 相关配置
 ktc:
-  mesh_file: 'Mesh_dense.mat'
+  mesh_file: 'Mesh_sparse.mat'
   nel: 32           # 电极数量
-  z: 0.01           # 接触阻抗
+  z: 1e-6           # 接触阻抗
+  category: 1       # 难度级别 (1-7)
