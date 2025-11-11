@@ -1,12 +1,13 @@
-# CNN 方法配置（基于 UNet）
+# CNN 方法配置（基于论文的CNN-EIM架构）
+# 使用EIM格式 (16×16)
+# 输出 64×64（论文改进版）
 
-# 继承基础配置
 data:
   data_dir: 'data'
   batch_size: 16
   num_workers: 4
   pin_memory: true
-  use_eim: true   # CNN改为使用EIM格式（物理上更合理）
+  use_eim: true  # 使用EIM格式（物理上更合理）
 
 training:
   num_epochs: 200
@@ -27,13 +28,9 @@ scheduler:
 
 results:
   base_dir: 'results'
-  method_name: 'cnn_unet'
+  method_name: 'cnn_paper_eim'
 
-# CNN 模型配置
+# CNN 模型配置 - 使用论文中的CNN-EIM架构
 model:
-  type: 'unet'
-  input_channels: 1     # 输入通道数
-  output_channels: 1    # 输出通道数
-  base_channels: 64     # 基础通道数
-  num_layers: 4         # U-Net 层数
-  dropout: 0.1          # Dropout 率
+  type: 'paper_cnn_eim'      # 使用论文的架构而不是通用UNet
+  output_size: 128            # 输出尺寸: 128×128（与ground truth一致）
