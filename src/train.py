@@ -124,10 +124,34 @@ def main():
 
     # 生成结果目录
     if args.result_dir:
-        # 用户指定了自定义名称，构建完整路径
+        # 用户指定了自定义名称
+        import re
         from datetime import datetime
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        result_dir = f"results/{args.result_dir}_{timestamp}"
+
+        # 如果指定了 resume，检查是否应该使用原目录
+        if args.resume:
+            # 从 resume 路径提取目录
+            resume_path = Path(args.resume)
+            resume_dir = resume_path.parent  # 例如：results/cnn_lr0.001_20251110_204011
+            resume_dir_name = resume_dir.name  # 例如：cnn_lr0.001_20251110_204011
+
+            # 去除时间戳部分（匹配 _YYYYMMDD_HHMMSS 格式）
+            resume_base_name = re.sub(r'_\d{8}_\d{6}$', '', resume_dir_name)  # 例如：cnn_lr0.001
+
+            # 比较 result_dir 和去除时间戳后的 resume 目录名
+            if args.result_dir == resume_base_name or args.result_dir == resume_dir_name:
+                # 使用原目录
+                result_dir = str(resume_dir)
+                print(f"恢复训练：使用原目录 {result_dir}")
+            else:
+                # 创建新目录
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                result_dir = f"results/{args.result_dir}_{timestamp}"
+                print(f"恢复训练：创建新目录 {result_dir}")
+        else:
+            # 没有 resume，创建新目录
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            result_dir = f"results/{args.result_dir}_{timestamp}"
     else:
         # 使用默认的方法名
         result_dir = None  # 让 UnifiedTrainer 自动生成

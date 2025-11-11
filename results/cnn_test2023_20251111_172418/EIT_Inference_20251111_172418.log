@@ -1,0 +1,10 @@
+2025-11-11 17:24:18 - EIT_Inference - INFO - Output directory: results/cnn_test2023_20251111_172418
+2025-11-11 17:24:18 - EIT_Inference - INFO - Inference method: cnn
+2025-11-11 17:24:18 - EIT_Inference - INFO - Checkpoint: results/cnn_lr0.001_20251110_204011/checkpoint_epoch_200.pth
+2025-11-11 17:24:18 - EIT_Inference - INFO - Dataset: test2023
+2025-11-11 17:24:18 - EIT_Inference - INFO - Setting up data module...
+2025-11-11 17:24:18 - EIT_Inference - INFO - Dataset size: 25
+2025-11-11 17:24:18 - EIT_Inference - INFO - Creating cnn method...
+2025-11-11 17:24:19 - EIT_Inference - INFO - Loading checkpoint from: results/cnn_lr0.001_20251110_204011/checkpoint_epoch_200.pth
+2025-11-11 17:24:20 - EIT_Inference - INFO - Starting inference...
+2025-11-11 17:24:20 - EIT_Inference - INFO - Processing: 0_1.npz -> reconstruction_0_1

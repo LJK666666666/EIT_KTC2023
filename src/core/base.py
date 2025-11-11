@@ -165,10 +165,11 @@ class BaseReconstructionMethod(ABC):
         if self.model is None:
             return None
 
-        optimizer_config = self.config.get('training', {})
-        lr = optimizer_config.get('learning_rate', 1e-3)
+        # 从 optimizer 配置读取参数
+        optimizer_config = self.config.get('optimizer', {})
+        lr = optimizer_config.get('lr', 1e-3)
         weight_decay = optimizer_config.get('weight_decay', 1e-5)
-        optimizer_type = optimizer_config.get('optimizer', 'adam').lower()
+        optimizer_type = optimizer_config.get('type', 'adam').lower()
 
         if optimizer_type == 'adam':
             return torch.optim.Adam(
@@ -196,17 +197,18 @@ class BaseReconstructionMethod(ABC):
         Returns:
             学习率调度器
         """
-        scheduler_config = self.config.get('training', {}).get('scheduler', {})
-        scheduler_type = scheduler_config.get('type', 'ReduceLROnPlateau')
+        # 从 scheduler 配置读取参数
+        scheduler_config = self.config.get('scheduler', {})
+        scheduler_type = scheduler_config.get('type', 'reduce_on_plateau').lower()
 
-        if scheduler_type == 'ReduceLROnPlateau':
+        if scheduler_type == 'reduce_on_plateau':
             return torch.optim.lr_scheduler.ReduceLROnPlateau(
                 optimizer,
                 mode='min',
                 factor=scheduler_config.get('factor', 0.5),
                 patience=scheduler_config.get('patience', 10)
             )
-        elif scheduler_type == 'StepLR':
+        elif scheduler_type == 'steplr':
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
                 step_size=scheduler_config.get('step_size', 10),

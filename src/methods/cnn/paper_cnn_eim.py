@@ -94,12 +94,13 @@ class PaperCNNEIM(nn.Module):
 
 class ImprovedPaperCNNEIM(nn.Module):
     """
-    改进版本：输出64×64而不是32×32
-    添加额外的反卷积层
+    改进版本：支持输出 64×64 或 128×128
+    通过调整最后一层反卷积的参数实现不同输出尺寸
     """
 
-    def __init__(self):
+    def __init__(self, output_size=64):
         super(ImprovedPaperCNNEIM, self).__init__()
+        self.output_size = output_size
 
         # 编码器（下采样路径）- 保持不变
         self.encoder = nn.Sequential(
@@ -132,7 +133,19 @@ class ImprovedPaperCNNEIM(nn.Module):
             nn.PReLU(),
         )
 
-        # 解码器（上采样路径）- 添加一个额外层以达到64×64
+        # 解码器（上采样路径）- 根据 output_size 选择最后一层的参数
+        if output_size == 64:
+            # 输出 64×64: kernel=2, stride=2
+            final_layer_kernel = 2
+            final_layer_stride = 2
+        elif output_size == 128:
+            # 输出 128×128: kernel=4, stride=4
+            # 计算: (32-1)*4 + 4 = 128
+            final_layer_kernel = 4
+            final_layer_stride = 4
+        else:
+            raise ValueError(f"Unsupported output_size: {output_size}. Only 64 and 128 are supported.")
+
         self.decoder = nn.Sequential(
             # Layer 1: 256 -> 256 (2×2 -> 4×4)
             nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0),
@@ -154,8 +167,8 @@ class ImprovedPaperCNNEIM(nn.Module):
             nn.BatchNorm2d(32),
             nn.LeakyReLU(negative_slope=0.1),
 
-            # Layer 5: 32 -> 1 (32×32 -> 64×64)
-            nn.ConvTranspose2d(32, 1, kernel_size=2, stride=2, padding=0),
+            # Layer 5: 32 -> 1 (32×32 -> output_size×output_size)
+            nn.ConvTranspose2d(32, 1, kernel_size=final_layer_kernel, stride=final_layer_stride, padding=0),
             nn.Tanh()  # 输出范围 [-1, 1]
         )
 
@@ -165,10 +178,10 @@ class ImprovedPaperCNNEIM(nn.Module):
         Args:
             x: [B, 1, 16, 16] EIM输入
         Returns:
-            out: [B, 1, 64, 64] 重建图像
+            out: [B, 1, output_size, output_size] 重建图像
         """
         encoded = self.encoder(x)  # [B, 256, 2, 2]
-        decoded = self.decoder(encoded)  # [B, 1, 64, 64]
+        decoded = self.decoder(encoded)  # [B, 1, output_size, output_size]
         return decoded
 
 
@@ -178,7 +191,7 @@ def create_cnn_eim(config):
 
     Args:
         config: 配置字典，可以包含 'output_size' 参数
-               - 'output_size': 32 (原论文) 或 64 (改进版本)
+               - 'output_size': 32 (原论文), 64 (改进版本), 128 (直接输出)
 
     Returns:
         模型实例
@@ -187,10 +200,10 @@ def create_cnn_eim(config):
 
     if output_size == 32:
         return PaperCNNEIM()
-    elif output_size == 64:
-        return ImprovedPaperCNNEIM()
+    elif output_size in [64, 128]:
+        return ImprovedPaperCNNEIM(output_size=output_size)
     else:
-        raise ValueError(f"Unsupported output_size: {output_size}")
+        raise ValueError(f"Unsupported output_size: {output_size}. Supported: 32, 64, 128")
 
 
 if __name__ == '__main__':
