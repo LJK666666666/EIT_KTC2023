@@ -1,0 +1,41 @@
+2025-11-12 23:33:01 - EIT_Inference - INFO - Output directory: results/inference_cnn_test2023_20251112_233301
+2025-11-12 23:33:01 - EIT_Inference - INFO - Inference method: cnn
+2025-11-12 23:33:01 - EIT_Inference - INFO - Checkpoint: results/cnn_lr0.01_size11520_20251112_003734/best_model.pth
+2025-11-12 23:33:01 - EIT_Inference - INFO - Dataset: test2023
+2025-11-12 23:33:01 - EIT_Inference - INFO - Setting up data module...
+2025-11-12 23:33:01 - EIT_Inference - INFO - Dataset size: 25
+2025-11-12 23:33:01 - EIT_Inference - INFO - Creating cnn method...
+2025-11-12 23:33:01 - EIT_Inference - INFO - Loading checkpoint from: results/cnn_lr0.01_size11520_20251112_003734/best_model.pth
+2025-11-12 23:33:01 - EIT_Inference - INFO - Starting inference...
+2025-11-12 23:33:02 - EIT_Inference - INFO - Processing: 0_1.npz -> reconstruction_0_1
+2025-11-12 23:33:02 - EIT_Inference - INFO - Processing: 0_2.npz -> reconstruction_0_2
+2025-11-12 23:33:03 - EIT_Inference - INFO - Processing: 0_3.npz -> reconstruction_0_3
+2025-11-12 23:33:03 - EIT_Inference - INFO - Processing: 0_4.npz -> reconstruction_0_4
+2025-11-12 23:33:04 - EIT_Inference - INFO - Processing: 1_1.npz -> reconstruction_1_1
+2025-11-12 23:33:04 - EIT_Inference - INFO - Processing: 1_2.npz -> reconstruction_1_2
+2025-11-12 23:33:05 - EIT_Inference - INFO - Processing: 1_3.npz -> reconstruction_1_3
+2025-11-12 23:33:05 - EIT_Inference - INFO - Processing: 2_1.npz -> reconstruction_2_1
+2025-11-12 23:33:05 - EIT_Inference - INFO - Processing: 2_2.npz -> reconstruction_2_2
+2025-11-12 23:33:06 - EIT_Inference - INFO - Processing: 2_3.npz -> reconstruction_2_3
+2025-11-12 23:33:06 - EIT_Inference - INFO - Processing: 3_1.npz -> reconstruction_3_1
+2025-11-12 23:33:07 - EIT_Inference - INFO - Processing: 3_2.npz -> reconstruction_3_2
+2025-11-12 23:33:07 - EIT_Inference - INFO - Processing: 3_3.npz -> reconstruction_3_3
+2025-11-12 23:33:08 - EIT_Inference - INFO - Processing: 4_1.npz -> reconstruction_4_1
+2025-11-12 23:33:08 - EIT_Inference - INFO - Processing: 4_2.npz -> reconstruction_4_2
+2025-11-12 23:33:09 - EIT_Inference - INFO - Processing: 4_3.npz -> reconstruction_4_3
+2025-11-12 23:33:09 - EIT_Inference - INFO - Processing: 5_1.npz -> reconstruction_5_1
+2025-11-12 23:33:10 - EIT_Inference - INFO - Processing: 5_2.npz -> reconstruction_5_2
+2025-11-12 23:33:10 - EIT_Inference - INFO - Processing: 5_3.npz -> reconstruction_5_3
+2025-11-12 23:33:11 - EIT_Inference - INFO - Processing: 6_1.npz -> reconstruction_6_1
+2025-11-12 23:33:11 - EIT_Inference - INFO - Processing: 6_2.npz -> reconstruction_6_2
+2025-11-12 23:33:12 - EIT_Inference - INFO - Processing: 6_3.npz -> reconstruction_6_3
+2025-11-12 23:33:13 - EIT_Inference - INFO - Processing: 7_1.npz -> reconstruction_7_1
+2025-11-12 23:33:13 - EIT_Inference - INFO - Processing: 7_2.npz -> reconstruction_7_2
+2025-11-12 23:33:14 - EIT_Inference - INFO - Processing: 7_3.npz -> reconstruction_7_3
+2025-11-12 23:33:14 - EIT_Inference - INFO - Average metrics:
+2025-11-12 23:33:14 - EIT_Inference - INFO -   mse: 0.084112
+2025-11-12 23:33:14 - EIT_Inference - INFO -   mae: 0.111169
+2025-11-12 23:33:14 - EIT_Inference - INFO -   psnr: 11.907239
+2025-11-12 23:33:14 - EIT_Inference - INFO -   ssim: 0.600798
+2025-11-12 23:33:14 - EIT_Inference - INFO -   relative_error: 0.940201
+2025-11-12 23:33:14 - EIT_Inference - INFO - Inference completed! Results saved to: results/inference_cnn_test2023_20251112_233301
