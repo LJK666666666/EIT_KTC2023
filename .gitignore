@@ -7,7 +7,7 @@ dist/
 build/
 *.npy
 *.pt
-*.npz
+# *.npz
 *.pth
 
 GUIDE/
