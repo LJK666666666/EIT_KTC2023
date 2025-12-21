@@ -1,0 +1,45 @@
+# D-bar 方法配置
+# D-bar 是一种基于数学理论的直接重建算法，不需要训练
+
+data:
+  data_dir: 'data'
+  batch_size: 1  # D-bar 方法计算量大，建议逐个处理
+  num_workers: 0
+  pin_memory: false
+
+training:
+  num_epochs: 1  # D-bar 方法无需训练
+  save_every: 1
+  device: 'cpu'  # D-bar 主要是 CPU 计算
+
+results:
+  base_dir: 'results'
+  method_name: 'dbar'
+
+# D-bar 方法配置
+method:
+  type: 'dbar'
+
+  # 电极配置
+  num_electrodes: 16    # 电极数量
+
+  # k 空间参数
+  R: 4.0                # k 空间截断半径（正则化参数）
+                        # R 越大重建越精细但对噪声更敏感
+                        # R 越小结果更平滑但丢失细节
+  m: 6                  # k 空间网格分辨率，N = 2^m = 64
+
+  # 散射变换类型
+  scattering_type: 'exp'  # 'exp': 指数近似（快速）
+                          # 'partial': 部分近似（更精确但更慢）
+
+  # 输出配置
+  output_size: 128      # 输出图像尺寸
+
+  # 物理参数
+  radius: 1.0           # 成像区域半径
+  electrode_area: 0.1   # 电极面积
+
+# 数据格式说明
+# 输入: 208 维 EIM 向量 (16 电极 × 13 测量/激励模式)
+# 输出: output_size × output_size 的电导率图像

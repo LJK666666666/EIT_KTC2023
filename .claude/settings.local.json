@@ -29,7 +29,9 @@
       "Bash(xargs basename:*)",
       "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" src/inference.py --method diffusion --checkpoint CDEIT/official/best.pt --dataset test2023 --batch_size 5 --output_dir test_batch5)",
       "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" main.py inference --help)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" -c \"\nimport sys\nsys.path.insert(0, ''.'')\nfrom src.methods.dbar.method import EIMConverter\nimport numpy as np\n\n# 测试矩阵到向量的转换\nconverter = EIMConverter(16)\n\n# 创建一个测试矩阵\ntest_matrix = np.random.randn(16, 16)\n# 将应该为 0 的位置设为 0\nfor i in range(16):\n    skip_positions = [(i - 1) % 16, i, (i + 1) % 16]\n    for j in skip_positions:\n        test_matrix[i, j] = 0\n\n# 转换为向量\nvector = converter.eim_matrix_to_vector(test_matrix)\nprint(f''Vector length: {len(vector)}'')\n\n# 再转回矩阵\nmatrix_back = converter.eim_vector_to_matrix(vector)\n\n# 验证非零元素是否相同\nprint(f''Conversion correct: {np.allclose(test_matrix, matrix_back)}'')\n\")",
+      "Bash(\"D:\\020_Software\\M\\miniconda\\Miniconda3\\python.exe\" test/test_forward_model.py)"
     ],
     "deny": [],
     "ask": []

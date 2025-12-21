@@ -14,16 +14,17 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
     """DeepDbar U-Net 重建方法"""
 
     def __init__(self, config: Dict):
+        # 先获取输出尺寸（在调用父类 __init__ 之前）
+        model_config = config.get('model', {})
+        self.output_size = model_config.get('output_size', 64)
+
         super().__init__(config)
         self.loss_fn = nn.MSELoss()
-
-        # 获取输出尺寸（DeepDbar固定为64x64）
-        self.output_size = 64
 
     def _build_model(self) -> nn.Module:
         """构建 DeepDbar U-Net 模型"""
         model = create_deepdbar_model(self.config)
-        print(f"[DeepDbar] 使用 DeepDbar U-Net 架构，输出尺寸: 64×64")
+        print(f"[DeepDbar] 使用 DeepDbar U-Net 架构，输出尺寸: {self.output_size}×{self.output_size}")
         return model
 
     def train_step(self, batch: Tuple[torch.Tensor, torch.Tensor]) -> Dict[str, float]:
@@ -46,11 +47,11 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
         if conductivity.dim() == 3:
             conductivity = conductivity.unsqueeze(1)
 
-        # 调整输入尺寸到64x64（如果需要）
-        if measurements.shape[-1] != 64 or measurements.shape[-2] != 64:
+        # 调整输入尺寸到 output_size（如果需要）
+        if measurements.shape[-1] != self.output_size or measurements.shape[-2] != self.output_size:
             measurements = torch.nn.functional.interpolate(
                 measurements,
-                size=(64, 64),
+                size=(self.output_size, self.output_size),
                 mode='bilinear',
                 align_corners=False
             )
@@ -58,11 +59,11 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
         # 前向传播
         pred = self.model(measurements)
 
-        # 调整目标尺寸到64x64（如果需要）
-        if conductivity.shape[-1] != 64 or conductivity.shape[-2] != 64:
+        # 调整目标尺寸到 output_size（如果需要）
+        if conductivity.shape[-1] != self.output_size or conductivity.shape[-2] != self.output_size:
             target = torch.nn.functional.interpolate(
                 conductivity,
-                size=(64, 64),
+                size=(self.output_size, self.output_size),
                 mode='bilinear',
                 align_corners=False
             )
@@ -94,11 +95,11 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
         if conductivity.dim() == 3:
             conductivity = conductivity.unsqueeze(1)
 
-        # 调整输入尺寸到64x64（如果需要）
-        if measurements.shape[-1] != 64 or measurements.shape[-2] != 64:
+        # 调整输入尺寸到 output_size（如果需要）
+        if measurements.shape[-1] != self.output_size or measurements.shape[-2] != self.output_size:
             measurements = torch.nn.functional.interpolate(
                 measurements,
-                size=(64, 64),
+                size=(self.output_size, self.output_size),
                 mode='bilinear',
                 align_corners=False
             )
@@ -107,11 +108,11 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
         with torch.no_grad():
             pred = self.model(measurements)
 
-        # 调整目标尺寸到64x64（如果需要）
-        if conductivity.shape[-1] != 64 or conductivity.shape[-2] != 64:
+        # 调整目标尺寸到 output_size（如果需要）
+        if conductivity.shape[-1] != self.output_size or conductivity.shape[-2] != self.output_size:
             target = torch.nn.functional.interpolate(
                 conductivity,
-                size=(64, 64),
+                size=(self.output_size, self.output_size),
                 mode='bilinear',
                 align_corners=False
             )
@@ -131,7 +132,7 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
             measurements: 测量数据 [batch, H, W] 或 [batch, 1, H, W]
 
         Returns:
-            重建的电导率图像 [batch, 1, 64, 64]
+            重建的电导率图像 [batch, 1, output_size, output_size]
         """
         measurements = measurements.to(self.device)
 
@@ -139,11 +140,11 @@ class DeepDbarReconstruction(BaseReconstructionMethod):
         if measurements.dim() == 3:
             measurements = measurements.unsqueeze(1)
 
-        # 调整输入尺寸到64x64（如果需要）
-        if measurements.shape[-1] != 64 or measurements.shape[-2] != 64:
+        # 调整输入尺寸到 output_size（如果需要）
+        if measurements.shape[-1] != self.output_size or measurements.shape[-2] != self.output_size:
             measurements = torch.nn.functional.interpolate(
                 measurements,
-                size=(64, 64),
+                size=(self.output_size, self.output_size),
                 mode='bilinear',
                 align_corners=False
             )

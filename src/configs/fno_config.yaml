@@ -1,0 +1,36 @@
+# FNO method config
+
+data:
+  data_dir: 'data'
+  batch_size: 8
+  num_workers: 4
+  pin_memory: true
+  use_eim: true
+
+training:
+  num_epochs: 200
+  save_every: 20
+  device: 'cuda'
+
+optimizer:
+  type: 'adam'
+  lr: 0.0005
+  weight_decay: 0.00001
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: 'reduce_on_plateau'
+  mode: 'min'
+  factor: 0.5
+  patience: 15
+
+model:
+  input_channels: 1
+  output_channels: 1
+  input_size: 16
+  output_size: 128
+  width: 64
+  depth: 4
+  modes1: 12
+  modes2: 12
+  add_coord: true

@@ -38,4 +38,4 @@ results:
 # DeepDbar 模型配置
 model:
   input_channels: 1     # 输入通道数（固定为1）
-  # DeepDbar 输出固定为 64×64
+  output_size: 128      # 输出尺寸（可选：64 或 128）
