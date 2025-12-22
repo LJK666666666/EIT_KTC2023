@@ -2,7 +2,7 @@
 
 data:
   data_dir: 'data'
-  batch_size: 8
+  batch_size: 64
   num_workers: 4
   pin_memory: true
   use_eim: true
@@ -14,7 +14,7 @@ training:
 
 optimizer:
   type: 'adam'
-  lr: 0.0005
+  lr: 0.001
   weight_decay: 0.00001
   betas: [0.9, 0.999]
 
