@@ -1,0 +1,22 @@
+{
+  "method": "fno",
+  "device": "cuda",
+  "config": "src/configs/fno_config.yaml",
+  "checkpoint": null,
+  "batch_size": 1,
+  "warmup": 2,
+  "runs": 5,
+  "params": 4739713,
+  "param_size_mb": 36.080570220947266,
+  "flops": 693108740,
+  "gflops": 0.69310874,
+  "avg_inference_ms": 2.159380000000155,
+  "times_ms": [
+    2.1414999999995743,
+    2.072300000000027,
+    2.1213000000006588,
+    2.298500000000203,
+    2.163300000000312
+  ],
+  "result_dir": "results\\profile_fno_1"
+}

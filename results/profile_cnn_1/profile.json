@@ -1,0 +1,22 @@
+{
+  "method": "cnn",
+  "device": "cuda",
+  "config": "src/configs/cnn_config.yaml",
+  "checkpoint": null,
+  "batch_size": 1,
+  "warmup": 2,
+  "runs": 5,
+  "params": 1987878,
+  "param_size_mb": 7.583152770996094,
+  "flops": 28606464,
+  "gflops": 0.028606464,
+  "avg_inference_ms": 3.0582599999998905,
+  "times_ms": [
+    3.005600000001607,
+    2.929199999998744,
+    2.9310999999996312,
+    3.2360999999987428,
+    3.1893000000007277
+  ],
+  "result_dir": "results\\profile_cnn_1"
+}
