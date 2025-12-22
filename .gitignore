@@ -18,3 +18,7 @@ data/valid/
 data/test/
 
 *.p
+
+.claude/
+CLAUDE.md
+AGENTS.md
