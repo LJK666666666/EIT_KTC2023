@@ -172,6 +172,14 @@ class UnifiedTrainer:
                     self.scheduler.state_dict() if self.scheduler else None
                 )
 
+            # 保存 last 检查点（每个 epoch）
+            self.method.save_checkpoint(
+                str(self.result_dir / 'last.pth'),
+                epoch,
+                self.optimizer.state_dict() if self.optimizer else None,
+                self.scheduler.state_dict() if self.scheduler else None
+            )
+
             # 保存训练历史
             self._save_history()
 
