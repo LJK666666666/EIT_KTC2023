@@ -1,9 +1,0 @@
-2025-11-28 09:53:08 - EIT_Inference - INFO - Output directory: results\inference_dbar_test2023_20251128_095308
-2025-11-28 09:53:08 - EIT_Inference - INFO - Inference method: dbar
-2025-11-28 09:53:08 - EIT_Inference - INFO - Checkpoint: None
-2025-11-28 09:53:08 - EIT_Inference - INFO - Dataset: test2023
-2025-11-28 09:53:08 - EIT_Inference - INFO - Setting up data module...
-2025-11-28 09:53:08 - EIT_Inference - INFO - Dataset size: 25
-2025-11-28 09:53:08 - EIT_Inference - INFO - Creating dbar method...
-2025-11-28 09:53:11 - EIT_Inference - INFO - D-bar method does not require checkpoint (non-learning method)
-2025-11-28 09:53:11 - EIT_Inference - INFO - Starting inference...
