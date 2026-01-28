@@ -9,6 +9,7 @@ from tqdm import tqdm
 import numpy as np
 import sys
 from datetime import datetime
+import re
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
@@ -67,7 +68,7 @@ def parse_args():
         '--output_dir',
         type=str,
         default=None,
-        help='Directory name for results (saved as results/{output_dir}_{timestamp}). Default: results/inference_{method}_{dataset}_{timestamp}'
+        help='Directory name for results (saved as results/{output_dir}_{num}). Default: if checkpoint provided, save under checkpoint folder/{dataset}; otherwise results/inference_{method}_{dataset}_{num}'
     )
 
     parser.add_argument(
@@ -118,13 +119,27 @@ def main():
     config['training']['device'] = args.device
     config['method_name'] = args.method
 
-    # 创建输出目录（自动添加 results/ 前缀和时间戳）
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    # ??????
     if args.output_dir is None:
-        output_dir = Path(f'results/inference_{args.method}_{args.dataset}_{timestamp}')
+        if args.checkpoint:
+            base_dir = Path(args.checkpoint).parent / args.dataset
+        else:
+            base_dir = Path(f'results/inference_{args.method}_{args.dataset}')
     else:
-        # 确保输出目录在 results/ 下，并自动添加时间戳
-        output_dir = Path(f'results/{args.output_dir}_{timestamp}')
+        # ??????? results/ ?
+        base_dir = Path(f'results/{args.output_dir}')
+
+    parent = base_dir.parent
+    base_name = base_dir.name
+    max_idx = -1
+    if parent.exists():
+        pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+        for item in parent.iterdir():
+            if item.is_dir():
+                match = pattern.match(item.name)
+                if match:
+                    max_idx = max(max_idx, int(match.group(1)))
+    output_dir = parent / f"{base_name}_{max_idx + 1:02d}"
 
     output_dir.mkdir(parents=True, exist_ok=True)
 

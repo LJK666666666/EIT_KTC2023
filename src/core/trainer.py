@@ -6,6 +6,7 @@ from typing import Dict, Optional, List
 from pathlib import Path
 import json
 from datetime import datetime
+import re
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -23,7 +24,8 @@ class UnifiedTrainer:
         train_loader: DataLoader,
         val_loader: DataLoader,
         config: Dict,
-        result_dir: Optional[str] = None
+        result_dir: Optional[str] = None,
+        full_config: Optional[Dict] = None
     ):
         """
         Args:
@@ -37,6 +39,7 @@ class UnifiedTrainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.config = config
+        self.full_config = full_config
 
         # 训练参数
         self.num_epochs = config.get('num_epochs', 100)
@@ -45,9 +48,19 @@ class UnifiedTrainer:
 
         # 结果目录
         if result_dir is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             method_name = config.get('method_name', 'unknown')
-            result_dir = f"results/{method_name}_{timestamp}"
+            base_dir = Path(f"results/{method_name}")
+            parent = base_dir.parent
+            base_name = base_dir.name
+            max_idx = -1
+            if parent.exists():
+                pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+                for item in parent.iterdir():
+                    if item.is_dir():
+                        match = pattern.match(item.name)
+                        if match:
+                            max_idx = max(max_idx, int(match.group(1)))
+            result_dir = str(parent / f"{base_name}_{max_idx + 1:02d}")
         self.result_dir = Path(result_dir)
         self.result_dir.mkdir(parents=True, exist_ok=True)
 

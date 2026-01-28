@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 import sys
+import re
 
 import torch
 from torch.profiler import profile, ProfilerActivity
@@ -76,11 +77,16 @@ def create_result_dir(base_name: str) -> Path:
     results_root = Path('results')
     results_root.mkdir(parents=True, exist_ok=True)
 
-    idx = 1
-    while (results_root / f"{base_name}_{idx}").exists():
-        idx += 1
+    pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+    max_idx = -1
+    for item in results_root.iterdir():
+        if item.is_dir():
+            match = pattern.match(item.name)
+            if match:
+                max_idx = max(max_idx, int(match.group(1)))
 
-    result_dir = results_root / f"{base_name}_{idx}"
+    next_idx = max_idx + 1
+    result_dir = results_root / f"{base_name}_{next_idx:02d}"
     result_dir.mkdir(parents=True, exist_ok=False)
     return result_dir
 

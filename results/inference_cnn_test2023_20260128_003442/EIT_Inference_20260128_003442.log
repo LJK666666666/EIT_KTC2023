@@ -1,8 +1,0 @@
-2026-01-28 00:34:42 - EIT_Inference - INFO - Output directory: results/inference_cnn_test2023_20260128_003442
-2026-01-28 00:34:42 - EIT_Inference - INFO - Inference method: cnn
-2026-01-28 00:34:42 - EIT_Inference - INFO - Checkpoint: results/cnn_lr0.001_20251110_204011
-2026-01-28 00:34:42 - EIT_Inference - INFO - Dataset: test2023
-2026-01-28 00:34:42 - EIT_Inference - INFO - Setting up data module...
-2026-01-28 00:34:42 - EIT_Inference - INFO - Dataset size: 25
-2026-01-28 00:34:42 - EIT_Inference - INFO - Creating cnn method...
-2026-01-28 00:34:43 - EIT_Inference - INFO - Loading checkpoint from: results/cnn_lr0.001_20251110_204011

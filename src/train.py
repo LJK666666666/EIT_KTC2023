@@ -77,7 +77,7 @@ def parse_args():
         '--result_dir',
         type=str,
         default=None,
-        help='Custom name for results directory (will be saved as results/{name}_{timestamp})'
+        help='Custom name for results directory (will be saved as results/{name}_{num})'
     )
 
     # 其他
@@ -122,41 +122,44 @@ def main():
     config['method_name'] = args.method
     config['training']['method_name'] = args.method
 
-    # 生成结果目录
+    # Result directory
     if args.result_dir:
-        # 用户指定了自定义名称
+        # Custom base name
         import re
-        from datetime import datetime
 
-        # 如果指定了 resume，检查是否应该使用原目录
+        def _next_indexed_dir(base_dir_str: str) -> str:
+            base_dir = Path(base_dir_str)
+            parent = base_dir.parent
+            base_name = base_dir.name
+            max_idx = -1
+            if parent.exists():
+                pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+                for item in parent.iterdir():
+                    if item.is_dir():
+                        match = pattern.match(item.name)
+                        if match:
+                            max_idx = max(max_idx, int(match.group(1)))
+            return str(parent / f"{base_name}_{max_idx + 1:02d}")
+
+        # Resume uses original directory when base name matches
         if args.resume:
-            # 从 resume 路径提取目录
             resume_path = Path(args.resume)
-            resume_dir = resume_path.parent  # 例如：results/cnn_lr0.001_20251110_204011
-            resume_dir_name = resume_dir.name  # 例如：cnn_lr0.001_20251110_204011
+            resume_dir = resume_path.parent
+            resume_dir_name = resume_dir.name
+            resume_base_name = re.sub(r'_\d{3}$', '', resume_dir_name)
 
-            # 去除时间戳部分（匹配 _YYYYMMDD_HHMMSS 格式）
-            resume_base_name = re.sub(r'_\d{8}_\d{6}$', '', resume_dir_name)  # 例如：cnn_lr0.001
-
-            # 比较 result_dir 和去除时间戳后的 resume 目录名
             if args.result_dir == resume_base_name or args.result_dir == resume_dir_name:
-                # 使用原目录
                 result_dir = str(resume_dir)
-                print(f"恢复训练：使用原目录 {result_dir}")
+                print(f"Resuming: use original dir {result_dir}")
             else:
-                # 创建新目录
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                result_dir = f"results/{args.result_dir}_{timestamp}"
-                print(f"恢复训练：创建新目录 {result_dir}")
+                result_dir = _next_indexed_dir(f"results/{args.result_dir}")
+                print(f"Resuming: create new dir {result_dir}")
         else:
-            # 没有 resume，创建新目录
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            result_dir = f"results/{args.result_dir}_{timestamp}"
+            result_dir = _next_indexed_dir(f"results/{args.result_dir}")
     else:
-        # 使用默认的方法名
-        result_dir = None  # 让 UnifiedTrainer 自动生成
+        # Default to method name
+        result_dir = None  # UnifiedTrainer generates
 
-    # 创建日志记录器
     logger = get_logger('EIT_Training', log_dir=result_dir)
     logger.info(f"Training method: {args.method}")
     logger.info(f"Config: {config}")
@@ -183,7 +186,8 @@ def main():
         train_loader=train_loader,
         val_loader=val_loader,
         config=config['training'],
-        result_dir=result_dir
+        result_dir=result_dir,
+        full_config=config
     )
 
     # 如果需要恢复训练
