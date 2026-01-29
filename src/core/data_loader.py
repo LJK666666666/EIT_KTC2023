@@ -77,24 +77,34 @@ class EITDataset(Dataset):
         Returns:
             eim: [1, 16, 16] tensor
         """
-        num = 16  # 电极数量
-        eim = torch.zeros(1, num, num)
+        num = 16
 
-        # 遍历每一行
-        for i in range(num):
-            # 确定本行零的位置
-            zero_positions = [(i + j) % num for j in range(3)]
-            row = zero_positions[1]
+        # 预先构建映射索引，避免每个样本都进行 Python 循环填充
+        if not hasattr(self, '_eim_col_index'):
+            rows = torch.arange(num, dtype=torch.long).unsqueeze(1)  # [16,1]
+            cols = torch.arange(num, dtype=torch.long).unsqueeze(0)  # [1,16]
 
-            # 填充非零元素
-            non_zero_index = 0
-            for j in range(num):
-                idx = j % num
-                if idx not in zero_positions:
-                    eim[:, row, idx] = voltage[:, row, non_zero_index]
-                    non_zero_index += 1
+            # 本行 3 个 0 的位置：row-1, row, row+1
+            mask = (
+                (cols != rows)
+                & (cols != (rows - 1) % num)
+                & (cols != (rows + 1) % num)
+            )  # [16,16] bool
 
-        return eim
+            # rank: 各行 True 位置在 0..12 的顺序索引；False 位置设为 -1
+            rank = torch.cumsum(mask.to(torch.long), dim=1) - 1  # [16,16]
+            col_index = torch.where(mask, rank, torch.full_like(rank, -1))  # [16,16]
+            self._eim_col_index = col_index  # -1 表示该位置为 0
+
+        col_index = self._eim_col_index.to(device=voltage.device)
+
+        # 对于 -1 的位置用 0 作为安全索引，并在最后乘 mask 置零
+        safe_index = col_index.clamp(min=0)  # [16,16]
+        src = voltage[0]  # [16,13]
+        gathered = src.gather(1, safe_index)  # [16,16]
+        mask = (col_index >= 0).to(gathered.dtype)
+        eim = gathered * mask
+        return eim.unsqueeze(0)
 
     def normalize(self, ys: torch.Tensor) -> torch.Tensor:
         """
@@ -243,62 +253,87 @@ class EITDataModule:
         if self.train_dataset is None:
             raise ValueError("Train dataset not set up. Call setup('fit') first.")
 
-        return DataLoader(
-            self.train_dataset,
+        loader_kwargs = dict(
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory
         )
+        if self.num_workers > 0:
+            loader_kwargs.update(
+                persistent_workers=True,
+                prefetch_factor=2
+            )
+        return DataLoader(self.train_dataset, **loader_kwargs)
 
     def val_dataloader(self) -> DataLoader:
         """验证数据加载器"""
         if self.val_dataset is None:
             raise ValueError("Validation dataset not set up. Call setup('fit') first.")
 
-        return DataLoader(
-            self.val_dataset,
+        loader_kwargs = dict(
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory
         )
+        if self.num_workers > 0:
+            loader_kwargs.update(
+                persistent_workers=True,
+                prefetch_factor=2
+            )
+        return DataLoader(self.val_dataset, **loader_kwargs)
 
     def test_dataloader(self) -> Optional[DataLoader]:
         """测试数据加载器"""
         if self.test_dataset is None:
             return None
 
-        return DataLoader(
-            self.test_dataset,
+        loader_kwargs = dict(
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory
         )
+        if self.num_workers > 0:
+            loader_kwargs.update(
+                persistent_workers=True,
+                prefetch_factor=2
+            )
+        return DataLoader(self.test_dataset, **loader_kwargs)
 
     def test2017_dataloader(self) -> Optional[DataLoader]:
         """2017年真实数据加载器"""
         if self.test2017_dataset is None:
             return None
 
-        return DataLoader(
-            self.test2017_dataset,
-            batch_size=self.batch_size,  # 使用配置中的 batch_size
+        loader_kwargs = dict(
+            batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory
         )
+        if self.num_workers > 0:
+            loader_kwargs.update(
+                persistent_workers=True,
+                prefetch_factor=2
+            )
+        return DataLoader(self.test2017_dataset, **loader_kwargs)
 
     def test2023_dataloader(self) -> Optional[DataLoader]:
         """2023年真实数据加载器"""
         if self.test2023_dataset is None:
             return None
 
-        return DataLoader(
-            self.test2023_dataset,
-            batch_size=self.batch_size,  # 使用配置中的 batch_size
+        loader_kwargs = dict(
+            batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory
         )
+        if self.num_workers > 0:
+            loader_kwargs.update(
+                persistent_workers=True,
+                prefetch_factor=2
+            )
+        return DataLoader(self.test2023_dataset, **loader_kwargs)
