@@ -233,6 +233,7 @@ class UnifiedTrainer:
         total_loss = 0.0
         num_batches = 0
         all_metrics = []
+        compute_metrics = not getattr(self.method, 'skip_val_metrics', False)
 
         with torch.no_grad():
             pbar = tqdm(self.val_loader, desc="Validation", leave=False)
@@ -248,7 +249,7 @@ class UnifiedTrainer:
 
                 # 计算评估指标（如果有真实值）
                 measurements, target = batch
-                if target is not None:
+                if compute_metrics and target is not None:
                     measurements = measurements.to(self.device)
                     target = target.to(self.device)
 

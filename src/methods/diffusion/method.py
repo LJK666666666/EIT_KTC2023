@@ -25,6 +25,7 @@ class DiffusionReconstruction(BaseReconstructionMethod):
 
     def __init__(self, config: Dict):
         super().__init__(config)
+        self.skip_val_metrics = True
 
         # 创建扩散模型
         model_config = config.get('model', {})
