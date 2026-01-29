@@ -2,14 +2,14 @@
 
 data:
   data_dir: 'data'
-  batch_size: 8
-  num_workers: 4
+  batch_size: 64
+  num_workers: 8
   pin_memory: true
   use_eim: true  # 使用EIM格式（16x16），CDEIT需要
 
 training:
   num_epochs: 500
-  save_every: 50
+  save_every: 2
   device: 'cuda'
 
 optimizer:
