@@ -68,7 +68,7 @@ def parse_args():
         '--output_dir',
         type=str,
         default=None,
-        help='Directory name for results (saved as results/{output_dir}_{num}). Default: if checkpoint provided, save under checkpoint folder/{dataset}; otherwise results/inference_{method}_{dataset}_{num}'
+        help='Directory name (or absolute base path) for results (saved as {base}_{num}). Default: if checkpoint provided, save under checkpoint folder/{dataset}; otherwise results/inference_{method}_{dataset}_{num}'
     )
 
     parser.add_argument(
@@ -126,14 +126,14 @@ def main():
         else:
             base_dir = Path(f'results/inference_{args.method}_{args.dataset}')
     else:
-        # ??????? results/ ?
-        base_dir = Path(f'results/{args.output_dir}')
+        req_base = Path(args.output_dir)
+        base_dir = req_base if req_base.is_absolute() else Path('results') / args.output_dir
 
     parent = base_dir.parent
     base_name = base_dir.name
     max_idx = -1
     if parent.exists():
-        pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+        pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{2}})$")
         for item in parent.iterdir():
             if item.is_dir():
                 match = pattern.match(item.name)

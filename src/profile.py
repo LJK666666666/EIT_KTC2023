@@ -68,28 +68,28 @@ def parse_args():
         '--result_dir',
         type=str,
         default=None,
-        help='Base name for results directory under results/'
+        help='Base name (or absolute base path) for results directory (saved as {base}_{num})'
     )
     return parser.parse_args()
 
 
-def create_result_dir(base_name: str) -> Path:
-    results_root = Path('results')
-    results_root.mkdir(parents=True, exist_ok=True)
+def create_result_dir(base_dir: Path) -> Path:
+    base_dir = Path(base_dir)
+    parent = base_dir.parent
+    base_name = base_dir.name
+    parent.mkdir(parents=True, exist_ok=True)
 
-    pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+    pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{2}})$")
     max_idx = -1
-    for item in results_root.iterdir():
+    for item in parent.iterdir():
         if item.is_dir():
             match = pattern.match(item.name)
             if match:
                 max_idx = max(max_idx, int(match.group(1)))
 
-    next_idx = max_idx + 1
-    result_dir = results_root / f"{base_name}_{next_idx:02d}"
+    result_dir = parent / f"{base_name}_{max_idx + 1:02d}"
     result_dir.mkdir(parents=True, exist_ok=False)
     return result_dir
-
 
 def build_measurements(config, batch_size, device):
     use_eim = config.get('data', {}).get('use_eim', True)
@@ -195,8 +195,13 @@ def main():
         device
     )
 
-    base_name = args.result_dir or f'profile_{args.method}'
-    result_dir = create_result_dir(base_name)
+    if args.result_dir is None:
+        base_dir = Path('results') / f'profile_{args.method}'
+    else:
+        req_base = Path(args.result_dir)
+        base_dir = req_base if req_base.is_absolute() else Path('results') / args.result_dir
+
+    result_dir = create_result_dir(base_dir)
 
     results = {
         'method': args.method,

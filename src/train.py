@@ -77,7 +77,7 @@ def parse_args():
         '--result_dir',
         type=str,
         default=None,
-        help='Custom name for results directory (will be saved as results/{name}_{num})'
+        help='Custom name (or absolute base path) for results directory (saved as {base}_{num})'
     )
 
     # 其他
@@ -124,40 +124,41 @@ def main():
 
     # Result directory
     if args.result_dir:
-        # Custom base name
         import re
 
-        def _next_indexed_dir(base_dir_str: str) -> str:
-            base_dir = Path(base_dir_str)
+        def _next_indexed_dir(base_dir: Path) -> Path:
             parent = base_dir.parent
             base_name = base_dir.name
             max_idx = -1
             if parent.exists():
-                pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{3}})$")
+                pattern = re.compile(rf"^{re.escape(base_name)}_(\d{{2}})$")
                 for item in parent.iterdir():
                     if item.is_dir():
                         match = pattern.match(item.name)
                         if match:
                             max_idx = max(max_idx, int(match.group(1)))
-            return str(parent / f"{base_name}_{max_idx + 1:02d}")
+            return parent / f"{base_name}_{max_idx + 1:02d}"
 
-        # Resume uses original directory when base name matches
+        req_base = Path(args.result_dir)
+        base_dir = req_base if req_base.is_absolute() else Path('results') / args.result_dir
+
         if args.resume:
             resume_path = Path(args.resume)
             resume_dir = resume_path.parent
             resume_dir_name = resume_dir.name
-            resume_base_name = re.sub(r'_\d{3}$', '', resume_dir_name)
+            resume_base_name = re.sub(r'_\d{2}$', '', resume_dir_name)
+            resume_base_dir = resume_dir.parent / resume_base_name
 
-            if args.result_dir == resume_base_name or args.result_dir == resume_dir_name:
+            # If base matches the resumed experiment, keep using original directory
+            if (req_base.is_absolute() and base_dir == resume_base_dir) or (not req_base.is_absolute() and (args.result_dir == resume_base_dir.name or args.result_dir == resume_dir_name)):
                 result_dir = str(resume_dir)
                 print(f"Resuming: use original dir {result_dir}")
             else:
-                result_dir = _next_indexed_dir(f"results/{args.result_dir}")
+                result_dir = str(_next_indexed_dir(base_dir))
                 print(f"Resuming: create new dir {result_dir}")
         else:
-            result_dir = _next_indexed_dir(f"results/{args.result_dir}")
+            result_dir = str(_next_indexed_dir(base_dir))
     else:
-        # Default to method name
         result_dir = None  # UnifiedTrainer generates
 
     logger = get_logger('EIT_Training', log_dir=result_dir)
