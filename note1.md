@@ -47,4 +47,30 @@
   1. 只改 DataLoader 参数（persistent_workers/prefetch_factor）                                                                                                              
   2. 优化 to_eim() 映射（去掉 Python 循环）                                                                                                                                  
   3. 加 AMP/TF32（训练器改动更大）                                                                                                                                           
- 
+
+
+› src\inference.py 和 src\evaluate.py 有什么区别？                                                                                                                          
+                                                                                                                                                                            
+                                                                                                                                                                            
+• 我理解你的问题是想区分这两个脚本在项目中的职责。我先快速对比 src/inference.py 和 src/evaluate.py 的入口参数、数据来源和输出内容，然后给你一个直接可用的结论。             
+                                                                                                                                                                            
+• 核心区别是：src/inference.py 是当前通用推理入口，src/evaluate.py 是旧的专项评估脚本（偏单一模型+KTC评分）。                                                               
+                                                                                                                                                                            
+  1. src/inference.py                                                                                                                                                       
+                                                                                                                                                                            
+  - 面向你现在的统一框架：create_method(...)，支持 cnn/diffusion/traditional/deepdbar/fno/dbar。                                                                            
+  - 支持 test/test2017/test2023 数据集。                                                                                                                                    
+  - 可加载 checkpoint 做批量推理，保存重建图、.mat、metrics.json。
+  - 评估指标用 EITEvaluator（MSE/MAE/PSNR/SSIM/relative_error）。
+
+  2. src/evaluate.py
+
+  - 不是走统一 methods 框架，而是直接 from model import get_model。
+  - 使用 eval_dataset.py 的 level 数据集，按 level 评估。
+  - 核心指标是 KTCScoring.scoringFunction，并生成 summary report。
+  - 更像历史/专项评测工具，不是你现在 main.py 工作流里的主路径。
+
+  简化理解：
+
+  - 日常训练后推理与结果导出：用 src/inference.py
+  - 想跑 KTC 评分体系和 level 报告：才用 src/evaluate.py
