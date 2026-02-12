@@ -11,6 +11,7 @@ from pathlib import Path
 def plot_reconstruction(
     reconstruction: np.ndarray,
     ground_truth: Optional[np.ndarray] = None,
+    nn_prediction: Optional[np.ndarray] = None,
     title: Optional[str] = None,
     save_path: Optional[str] = None,
     cmap: str = 'viridis',
@@ -22,22 +23,50 @@ def plot_reconstruction(
     Args:
         reconstruction: 重建图像
         ground_truth: 真实图像（可选）
+        nn_prediction: 神经网络原始预测图像（可选）
         title: 图像标题
         save_path: 保存路径
         cmap: 颜色映射
         figsize: 图像大小
     """
-    if ground_truth is not None:
+    if ground_truth is not None and nn_prediction is not None:
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        combined_min = float(min(np.min(ground_truth), np.min(nn_prediction), np.min(reconstruction)))
+        combined_max = float(max(np.max(ground_truth), np.max(nn_prediction), np.max(reconstruction)))
+
+        im1 = axes[0].imshow(ground_truth, cmap=cmap, vmin=combined_min, vmax=combined_max)
+        axes[0].set_title('Ground Truth')
+        axes[0].axis('off')
+        plt.colorbar(im1, ax=axes[0])
+
+        im2 = axes[1].imshow(nn_prediction, cmap=cmap, vmin=combined_min, vmax=combined_max)
+        axes[1].set_title('NN Prediction')
+        axes[1].axis('off')
+        plt.colorbar(im2, ax=axes[1])
+
+        im3 = axes[2].imshow(reconstruction, cmap=cmap, vmin=combined_min, vmax=combined_max)
+        axes[2].set_title('Physics Optimized')
+        axes[2].axis('off')
+        plt.colorbar(im3, ax=axes[2])
+
+        diff = np.abs(ground_truth - reconstruction)
+        im4 = axes[3].imshow(diff, cmap='hot')
+        axes[3].set_title('Absolute Error')
+        axes[3].axis('off')
+        plt.colorbar(im4, ax=axes[3])
+    elif ground_truth is not None:
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        combined_min = float(min(np.min(ground_truth), np.min(reconstruction)))
+        combined_max = float(max(np.max(ground_truth), np.max(reconstruction)))
 
         # 真实图像
-        im1 = axes[0].imshow(ground_truth, cmap=cmap)
+        im1 = axes[0].imshow(ground_truth, cmap=cmap, vmin=combined_min, vmax=combined_max)
         axes[0].set_title('Ground Truth')
         axes[0].axis('off')
         plt.colorbar(im1, ax=axes[0])
 
         # 重建图像
-        im2 = axes[1].imshow(reconstruction, cmap=cmap)
+        im2 = axes[1].imshow(reconstruction, cmap=cmap, vmin=combined_min, vmax=combined_max)
         axes[1].set_title('Reconstruction')
         axes[1].axis('off')
         plt.colorbar(im2, ax=axes[1])

@@ -1,0 +1,41 @@
+2026-02-11 19:42:02 - EIT_Inference - INFO - Output directory: results\fno_00\test2023_01
+2026-02-11 19:42:02 - EIT_Inference - INFO - Inference method: fno
+2026-02-11 19:42:02 - EIT_Inference - INFO - Checkpoint: results\fno_00\best_model.pth
+2026-02-11 19:42:02 - EIT_Inference - INFO - Dataset: test2023
+2026-02-11 19:42:02 - EIT_Inference - INFO - Setting up data module...
+2026-02-11 19:42:02 - EIT_Inference - INFO - Dataset size: 25
+2026-02-11 19:42:02 - EIT_Inference - INFO - Creating fno method...
+2026-02-11 19:42:05 - EIT_Inference - INFO - Loading checkpoint from: results\fno_00\best_model.pth
+2026-02-11 19:42:05 - EIT_Inference - INFO - Starting inference...
+2026-02-11 19:42:05 - EIT_Inference - INFO - Processing: 0_1.npz -> reconstruction_0_1
+2026-02-11 19:42:06 - EIT_Inference - INFO - Processing: 0_2.npz -> reconstruction_0_2
+2026-02-11 19:42:06 - EIT_Inference - INFO - Processing: 0_3.npz -> reconstruction_0_3
+2026-02-11 19:42:06 - EIT_Inference - INFO - Processing: 0_4.npz -> reconstruction_0_4
+2026-02-11 19:42:07 - EIT_Inference - INFO - Processing: 1_1.npz -> reconstruction_1_1
+2026-02-11 19:42:07 - EIT_Inference - INFO - Processing: 1_2.npz -> reconstruction_1_2
+2026-02-11 19:42:07 - EIT_Inference - INFO - Processing: 1_3.npz -> reconstruction_1_3
+2026-02-11 19:42:08 - EIT_Inference - INFO - Processing: 2_1.npz -> reconstruction_2_1
+2026-02-11 19:42:08 - EIT_Inference - INFO - Processing: 2_2.npz -> reconstruction_2_2
+2026-02-11 19:42:08 - EIT_Inference - INFO - Processing: 2_3.npz -> reconstruction_2_3
+2026-02-11 19:42:09 - EIT_Inference - INFO - Processing: 3_1.npz -> reconstruction_3_1
+2026-02-11 19:42:09 - EIT_Inference - INFO - Processing: 3_2.npz -> reconstruction_3_2
+2026-02-11 19:42:09 - EIT_Inference - INFO - Processing: 3_3.npz -> reconstruction_3_3
+2026-02-11 19:42:09 - EIT_Inference - INFO - Processing: 4_1.npz -> reconstruction_4_1
+2026-02-11 19:42:10 - EIT_Inference - INFO - Processing: 4_2.npz -> reconstruction_4_2
+2026-02-11 19:42:10 - EIT_Inference - INFO - Processing: 4_3.npz -> reconstruction_4_3
+2026-02-11 19:42:10 - EIT_Inference - INFO - Processing: 5_1.npz -> reconstruction_5_1
+2026-02-11 19:42:10 - EIT_Inference - INFO - Processing: 5_2.npz -> reconstruction_5_2
+2026-02-11 19:42:11 - EIT_Inference - INFO - Processing: 5_3.npz -> reconstruction_5_3
+2026-02-11 19:42:11 - EIT_Inference - INFO - Processing: 6_1.npz -> reconstruction_6_1
+2026-02-11 19:42:11 - EIT_Inference - INFO - Processing: 6_2.npz -> reconstruction_6_2
+2026-02-11 19:42:12 - EIT_Inference - INFO - Processing: 6_3.npz -> reconstruction_6_3
+2026-02-11 19:42:12 - EIT_Inference - INFO - Processing: 7_1.npz -> reconstruction_7_1
+2026-02-11 19:42:12 - EIT_Inference - INFO - Processing: 7_2.npz -> reconstruction_7_2
+2026-02-11 19:42:13 - EIT_Inference - INFO - Processing: 7_3.npz -> reconstruction_7_3
+2026-02-11 19:42:13 - EIT_Inference - INFO - Average metrics:
+2026-02-11 19:42:13 - EIT_Inference - INFO -   mse: 0.100888
+2026-02-11 19:42:13 - EIT_Inference - INFO -   mae: 0.127665
+2026-02-11 19:42:13 - EIT_Inference - INFO -   psnr: 11.408576
+2026-02-11 19:42:13 - EIT_Inference - INFO -   ssim: 0.610345
+2026-02-11 19:42:13 - EIT_Inference - INFO -   relative_error: 1.023433
+2026-02-11 19:42:13 - EIT_Inference - INFO - Inference completed! Results saved to: results\fno_00\test2023_01

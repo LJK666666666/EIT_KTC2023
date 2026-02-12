@@ -99,12 +99,62 @@ def parse_args():
         help='Device to use (cuda/cpu)'
     )
 
+    parser.add_argument(
+        '--sample_idx',
+        type=int,
+        default=None,
+        help='Run inference on a single sample index in the selected dataset (supports fast debug)'
+    )
+
+    parser.add_argument(
+        '--test_opt_physics',
+        action='store_true',
+        help='Enable test-time optimization with differentiable physics backend (cnn only)'
+    )
+
+    parser.add_argument(
+        '--test_opt_backend',
+        type=str,
+        default='linearized_ktc',
+        help='Physics backend type for test-time optimization'
+    )
+
+    parser.add_argument(
+        '--test_opt_steps',
+        type=int,
+        default=20,
+        help='Number of optimization steps per sample'
+    )
+
+    parser.add_argument(
+        '--test_opt_lr',
+        type=float,
+        default=1e-2,
+        help='Learning rate for test-time optimization'
+    )
+
+    parser.add_argument(
+        '--test_opt_lambda_smooth',
+        type=float,
+        default=1e-4,
+        help='Smoothness regularization weight for test-time optimization'
+    )
+
+    parser.add_argument(
+        '--test_opt_save_curve',
+        action='store_true',
+        default=True,
+        help='Save per-sample optimization loss curve'
+    )
+
     return parser.parse_args()
 
 
 def main():
     """主函数"""
     args = parse_args()
+    if args.sample_idx is not None and args.sample_idx < 0:
+        raise ValueError(f"--sample_idx must be >= 0, got {args.sample_idx}")
 
     # 加载配置
     if args.config is None:
@@ -118,6 +168,18 @@ def main():
     config['data']['batch_size'] = args.batch_size
     config['training']['device'] = args.device
     config['method_name'] = args.method
+
+    if args.test_opt_physics:
+        if args.method.lower() != 'cnn':
+            raise ValueError("--test_opt_physics currently supports only --method cnn")
+        if args.checkpoint is None:
+            default_checkpoint = Path('results') / 'cnn_01' / 'best_model.pth'
+            if not default_checkpoint.exists():
+                raise ValueError(
+                    f"Default checkpoint not found: {default_checkpoint}. "
+                    "Please pass --checkpoint explicitly."
+                )
+            args.checkpoint = str(default_checkpoint)
 
     # ??????
     if args.output_dir is None:
@@ -149,6 +211,14 @@ def main():
     logger.info(f"Inference method: {args.method}")
     logger.info(f"Checkpoint: {args.checkpoint}")
     logger.info(f"Dataset: {args.dataset}")
+    logger.info(f"Single sample index: {args.sample_idx}")
+    logger.info(f"Test-time physics optimization: {args.test_opt_physics}")
+    if args.test_opt_physics:
+        logger.info(f"Physics backend: {args.test_opt_backend}")
+        logger.info(
+            f"Optimization params: steps={args.test_opt_steps}, lr={args.test_opt_lr}, "
+            f"lambda_smooth={args.test_opt_lambda_smooth}"
+        )
 
     # 创建数据模块
     logger.info("Setting up data module...")
@@ -197,6 +267,14 @@ def main():
 
     # 检查是否是 Traditional 方法
     is_traditional = args.method.lower() == 'traditional'
+
+    if args.sample_idx is not None:
+        if args.sample_idx >= len(dataloader.dataset):
+            raise ValueError(
+                f"--sample_idx out of range: {args.sample_idx}, dataset size: {len(dataloader.dataset)}"
+            )
+        if args.method.lower() == 'traditional':
+            raise ValueError("--sample_idx is not supported for traditional method")
 
     if is_traditional:
         # Traditional 方法特殊处理：直接调用一次 inference，它会处理所有文件
@@ -263,64 +341,109 @@ def main():
     else:
         # 标准推理流程（其他方法）
         all_metrics = []
-        with torch.no_grad():
-            for idx, batch in enumerate(tqdm(dataloader, desc="Inference")):
-                measurements, target = batch
-                measurements = measurements.to(args.device)
+        if args.test_opt_physics:
+            from src.methods.cnn.physics_backend import create_physics_backend
+            from src.methods.cnn.test_time_opt import optimize_sigma_with_backend, save_loss_curve
 
-                # 推理
-                reconstruction = method.inference(measurements)
+        if args.sample_idx is not None:
+            sample_measurements, sample_target = dataloader.dataset[args.sample_idx]
+            single_measurements = sample_measurements.unsqueeze(0).to(args.device)
+            single_target = sample_target.unsqueeze(0) if sample_target is not None else None
+            iter_batches = [(0, (single_measurements, single_target), args.sample_idx)]
+        else:
+            iter_batches = ((idx, batch, None) for idx, batch in enumerate(dataloader))
 
-                # 转换为 numpy
-                reconstruction_np = reconstruction.cpu().numpy()
-                measurements_np = measurements.cpu().numpy()
+        for idx, batch, fixed_sample_idx in tqdm(iter_batches, desc="Inference"):
+            measurements, target = batch
+            measurements = measurements.to(args.device)
 
-                # 保存结果
-                for i in range(reconstruction.shape[0]):
+            # 初始推理（神经网络猜测）
+            reconstruction_init = method.inference(measurements)
+
+            # 保存结果
+            for i in range(reconstruction_init.shape[0]):
+                if fixed_sample_idx is not None:
+                    sample_idx = fixed_sample_idx
+                else:
                     sample_idx = idx * args.batch_size + i
-                    recon = reconstruction_np[i, 0]  # [H, W]
+                original_file_path = dataloader.dataset.data_files[sample_idx]
+                file_stem = original_file_path.stem
+                filename_without_ext = file_stem
 
-                    # 如果重建结果尺寸与 ground truth 不同，调整尺寸
+                logger.info(f"Processing: {original_file_path.name} -> reconstruction_{filename_without_ext}")
+
+                if args.test_opt_physics:
+                    sigma_init = reconstruction_init[i:i+1]
+                    meas_i = measurements[i:i+1]
+
+                    backend = create_physics_backend(
+                        args.test_opt_backend,
+                        output_size=sigma_init.shape[-1],
+                        device=str(sigma_init.device)
+                    )
+                    sigma_opt, loss_history = optimize_sigma_with_backend(
+                        sigma_init=sigma_init,
+                        measurements=meas_i,
+                        backend=backend,
+                        steps=args.test_opt_steps,
+                        lr=args.test_opt_lr,
+                        lambda_smooth=args.test_opt_lambda_smooth
+                    )
+                    recon = sigma_opt[0, 0].detach().cpu().numpy()
+
+                    if args.test_opt_save_curve:
+                        curve_json = output_dir / f"loss_curve_{filename_without_ext}.json"
+                        curve_png = output_dir / f"loss_curve_{filename_without_ext}.png"
+                        save_loss_curve(loss_history, curve_json, curve_png)
+                    nn_pred_for_plot = sigma_init[0, 0].detach().cpu().numpy()
+                else:
+                    recon = reconstruction_init[i, 0].detach().cpu().numpy()
+                    nn_pred_for_plot = None
+
+                # 如果重建结果尺寸与 ground truth 不同，调整尺寸
+                if target is not None:
+                    target_size = target.shape[-1]
+                    if recon.shape[0] != target_size:
+                        from PIL import Image
+                        recon = np.array(Image.fromarray(recon).resize(
+                            (target_size, target_size), Image.BILINEAR
+                        ))
+                    if nn_pred_for_plot is not None and nn_pred_for_plot.shape[0] != target_size:
+                        from PIL import Image
+                        nn_pred_for_plot = np.array(Image.fromarray(nn_pred_for_plot).resize(
+                            (target_size, target_size), Image.BILINEAR
+                        ))
+
+                # 保存 .mat 文件
+                if args.save_mat:
+                    mat_path = output_dir / f'reconstruction_{filename_without_ext}.mat'
+                    save_mat({'reconstruction': recon}, str(mat_path))
+
+                # 保存图像
+                if args.save_images:
                     if target is not None:
-                        target_size = target.shape[-1]  # 假设 target 是方形的
-                        if recon.shape[0] != target_size:
-                            from PIL import Image
-                            recon = np.array(Image.fromarray(recon).resize(
-                                (target_size, target_size), Image.BILINEAR
-                            ))
-
-                    # 获取原始文件名（不包括扩展名）
-                    # 例如：从 "0_1.npz" 或 "0_1.mat" 提取 "0_1"
-                    original_file_path = dataloader.dataset.data_files[sample_idx]
-                    file_stem = original_file_path.stem  # 去掉扩展名
-                    filename_without_ext = file_stem  # 例如 "0_1"
-
-                    logger.info(f"Processing: {original_file_path.name} -> reconstruction_{filename_without_ext}")
-
-                    # 保存 .mat 文件
-                    if args.save_mat:
-                        mat_path = output_dir / f'reconstruction_{filename_without_ext}.mat'
-                        save_mat({'reconstruction': recon}, str(mat_path))
-
-                    # 保存图像
-                    if args.save_images:
-                        # 如果有真实值，绘制对比图
-                        if target is not None:
-                            target_np = target.cpu().numpy()
-                            ground_truth = target_np[i, 0]
-                            img_path = output_dir / f'reconstruction_{filename_without_ext}.png'
+                        target_np = target.cpu().numpy()
+                        ground_truth = target_np[i, 0]
+                        img_path = output_dir / f'reconstruction_{filename_without_ext}.png'
+                        if args.test_opt_physics:
+                            plot_reconstruction(
+                                recon,
+                                ground_truth,
+                                nn_prediction=nn_pred_for_plot,
+                                save_path=str(img_path)
+                            )
+                        else:
                             plot_reconstruction(recon, ground_truth, save_path=str(img_path))
 
-                            # 计算评估指标（使用调整尺寸后的 recon）
-                            recon_tensor = torch.from_numpy(recon[np.newaxis, np.newaxis, :, :]).float().to(args.device)
-                            metrics = evaluator.compute_all_metrics(
-                                recon_tensor,
-                                target[i:i+1].to(args.device)
-                            )
-                            all_metrics.append(metrics)
-                        else:
-                            img_path = output_dir / f'reconstruction_{filename_without_ext}.png'
-                            plot_reconstruction(recon, save_path=str(img_path))
+                        recon_tensor = torch.from_numpy(recon[np.newaxis, np.newaxis, :, :]).float().to(args.device)
+                        metrics = evaluator.compute_all_metrics(
+                            recon_tensor,
+                            target[i:i+1].to(args.device)
+                        )
+                        all_metrics.append(metrics)
+                    else:
+                        img_path = output_dir / f'reconstruction_{filename_without_ext}.png'
+                        plot_reconstruction(recon, save_path=str(img_path))
 
     # 汇总评估指标
     if all_metrics:

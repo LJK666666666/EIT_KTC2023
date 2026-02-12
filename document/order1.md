@@ -1,0 +1,5 @@
+  - --test_opt_physics
+  - --test_opt_backend（默认 linearized_ktc）
+  - --test_opt_steps（默认 20）
+  - --test_opt_lr（默认 1e-2）
+  - --test_opt_save_curve

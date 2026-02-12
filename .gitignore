@@ -22,3 +22,6 @@ data/test/
 .claude/
 CLAUDE.md
 AGENTS.md
+
+!mean.pth
+!std.pth
