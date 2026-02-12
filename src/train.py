@@ -123,6 +123,10 @@ def main():
     config['training']['method_name'] = args.method
 
     # Result directory
+    # Priority:
+    # 1) If --result_dir is provided, use user-specified base path/name.
+    # 2) If only --resume is provided, continue writing to checkpoint parent directory.
+    # 3) Otherwise let UnifiedTrainer auto-generate under default results/.
     if args.result_dir:
         import re
 
@@ -158,6 +162,9 @@ def main():
                 print(f"Resuming: create new dir {result_dir}")
         else:
             result_dir = str(_next_indexed_dir(base_dir))
+    elif args.resume:
+        result_dir = str(Path(args.resume).parent)
+        print(f"Resume without --result_dir: use checkpoint directory {result_dir}")
     else:
         result_dir = None  # UnifiedTrainer generates
 

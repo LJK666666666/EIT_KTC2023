@@ -1,0 +1,21 @@
+2026-02-12 16:43:17 - EIT_Inference - INFO - Output directory: results\cnn_01\test2023_04
+2026-02-12 16:43:17 - EIT_Inference - INFO - Inference method: cnn
+2026-02-12 16:43:17 - EIT_Inference - INFO - Checkpoint: results/cnn_01/best_model.pth
+2026-02-12 16:43:17 - EIT_Inference - INFO - Dataset: test2023
+2026-02-12 16:43:17 - EIT_Inference - INFO - Single sample index: 2
+2026-02-12 16:43:17 - EIT_Inference - INFO - Test-time physics optimization: True
+2026-02-12 16:43:17 - EIT_Inference - INFO - Physics backend: linearized_ktc
+2026-02-12 16:43:17 - EIT_Inference - INFO - Optimization params: steps=1000, lr=0.01, lambda_smooth=0.0001
+2026-02-12 16:43:17 - EIT_Inference - INFO - Setting up data module...
+2026-02-12 16:43:18 - EIT_Inference - INFO - Dataset size: 25
+2026-02-12 16:43:18 - EIT_Inference - INFO - Creating cnn method...
+2026-02-12 16:43:20 - EIT_Inference - INFO - Loading checkpoint from: results/cnn_01/best_model.pth
+2026-02-12 16:43:20 - EIT_Inference - INFO - Starting inference...
+2026-02-12 16:43:20 - EIT_Inference - INFO - Processing: 0_3.npz -> reconstruction_0_3
+2026-02-12 16:43:27 - EIT_Inference - INFO - Average metrics:
+2026-02-12 16:43:27 - EIT_Inference - INFO -   mse: 5.018719
+2026-02-12 16:43:27 - EIT_Inference - INFO -   mae: 1.857477
+2026-02-12 16:43:27 - EIT_Inference - INFO -   psnr: -7.005928
+2026-02-12 16:43:27 - EIT_Inference - INFO -   ssim: 0.004409
+2026-02-12 16:43:27 - EIT_Inference - INFO -   relative_error: 7.773665
+2026-02-12 16:43:27 - EIT_Inference - INFO - Inference completed! Results saved to: results\cnn_01\test2023_04

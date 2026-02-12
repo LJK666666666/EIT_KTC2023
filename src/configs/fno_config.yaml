@@ -3,7 +3,7 @@
 data:
   data_dir: 'data'
   batch_size: 64
-  num_workers: 4
+  num_workers: 8
   pin_memory: true
   use_eim: true
 

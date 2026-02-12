@@ -379,7 +379,10 @@ def main():
                     backend = create_physics_backend(
                         args.test_opt_backend,
                         output_size=sigma_init.shape[-1],
-                        device=str(sigma_init.device)
+                        device=str(sigma_init.device),
+                        mean=dataloader.dataset.mean,
+                        std=dataloader.dataset.std,
+                        voltage=dataloader.dataset.voltage
                     )
                     sigma_opt, loss_history = optimize_sigma_with_backend(
                         sigma_init=sigma_init,
