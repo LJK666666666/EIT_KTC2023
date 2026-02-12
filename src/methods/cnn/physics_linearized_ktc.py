@@ -13,6 +13,7 @@ import sys
 
 import numpy as np
 import scipy.sparse as sp
+import scipy.io as sio
 import torch
 
 from .physics_backend import PhysicsBackend
@@ -23,7 +24,6 @@ if str(ktc_path) not in sys.path:
     sys.path.insert(0, str(ktc_path))
 
 import KTCFwd  # type: ignore
-import KTCAux  # type: ignore
 from ...sim_dataset import load_mesh
 
 
@@ -41,21 +41,6 @@ def _build_expand_index() -> List[Tuple[int, int, int]]:
             idx_map.append((compact_idx, row, col))
             compact_idx += 1
     return idx_map
-
-
-def _build_virtual_pair_inj32() -> np.ndarray:
-    # 16 virtual patterns on 32 physical electrodes.
-    inj = np.zeros((32, 16), dtype=np.float64)
-    for p in range(16):
-        a = (2 * p) % 32
-        b = (2 * p + 1) % 32
-        c = (2 * p + 2) % 32
-        d = (2 * p + 3) % 32
-        inj[a, p] = 0.5
-        inj[b, p] = 0.5
-        inj[c, p] = -0.5
-        inj[d, p] = -0.5
-    return inj
 
 
 def _build_pair_transform_31_to_16() -> np.ndarray:
@@ -153,8 +138,26 @@ class LinearizedKTCBackend(PhysicsBackend):
         self.voltage = float(voltage)
 
         self.mesh, self.mesh2 = load_mesh("Mesh_sparse.mat")
-        self.inj = _build_virtual_pair_inj32()
-        _, self.mpat, _ = KTCAux.setMeasurementPattern(32)  # mpat is 32x31
+        ref_mat_path = (
+            Path(__file__).resolve().parents[3]
+            / "EvaluationData_full"
+            / "evaluation_datasets"
+            / "level1"
+            / "ref.mat"
+        )
+        if not ref_mat_path.exists():
+            raise ValueError(f"Reference file not found: {ref_mat_path}")
+        ref_mat = sio.loadmat(str(ref_mat_path))
+        inj_full = np.asarray(ref_mat["Injref"], dtype=np.float64)  # [32, 76]
+        self.inj = inj_full[:, :16].copy()  # first 16 skip-1 patterns
+        self.mpat = np.asarray(ref_mat["Mpat"], dtype=np.float64)    # [32, 31]
+        uref_full = np.asarray(ref_mat["Uelref"], dtype=np.float64).reshape(-1)  # [31*76]
+        if uref_full.size != 31 * inj_full.shape[1]:
+            raise ValueError(
+                f"Unexpected Uelref size: {uref_full.size}, expected {31 * inj_full.shape[1]}"
+            )
+        # Uelref is inj-major: [inj0 31 meas, inj1 31 meas, ...]
+        self.uref_adj_31x16 = uref_full.reshape(inj_full.shape[1], 31).T[:, :16]  # [31, 16]
         self.vincl = np.ones((31, self.inj.shape[1]), dtype=bool)
         self.solver = KTCFwd.EITFEM(self.mesh2, self.inj, self.mpat, self.vincl)
         self.z = (1e-6) * np.ones((32, 1), dtype=np.float64)
@@ -183,14 +186,13 @@ class LinearizedKTCBackend(PhysicsBackend):
         sigma0_flat = sigma0_img.reshape(-1)
         sigma0_nodes = self._w_img_to_nodes @ sigma0_flat
 
-        # Map network output to physical conductivity (baseline 1 + perturbation)
-        sigma0_phys = np.clip(1.0 + sigma0_nodes, 1e-6, None).reshape(-1, 1)
-        sigma_ref = np.ones((self.n_nodes, 1), dtype=np.float64)
+        # Map network output to physical conductivity around KTC background 0.745
+        sigma0_phys = np.clip(0.745 + sigma0_nodes, 1e-6, None).reshape(-1, 1)
 
-        d_adj_ref, _ = self._solve_adj_and_jac(sigma_ref, need_jac=False)
+        d_adj_ref_meas = self.uref_adj_31x16
         d_adj_0, j_adj_0 = self._solve_adj_and_jac(sigma0_phys, need_jac=True)
 
-        y_compact_ref, _ = self._adj_to_compact_and_jac(d_adj_ref, None)
+        y_compact_ref, _ = self._adj_to_compact_and_jac(d_adj_ref_meas, None)
         y_compact_0, j_compact_mesh = self._adj_to_compact_and_jac(d_adj_0, j_adj_0)
 
         y_delta_0 = y_compact_0 - y_compact_ref
@@ -259,4 +261,3 @@ class LinearizedKTCBackend(PhysicsBackend):
             return y_compact, None
         j_compact = np.stack(j_rows, axis=0).astype(np.float64)  # [208, n_nodes]
         return y_compact, j_compact
-
