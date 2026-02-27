@@ -42,6 +42,13 @@ def parse_args():
         default='data',
         help='Path to data directory'
     )
+    parser.add_argument(
+        '--measurement_format',
+        type=str,
+        default=None,
+        choices=['eim16', 'raw16x13', 'matrix32'],
+        help='Measurement format: eim16/raw16x13/matrix32 (overrides config)'
+    )
 
     # 训练相关
     parser.add_argument(
@@ -117,6 +124,8 @@ def main():
 
     if args.device:
         config['training']['device'] = args.device
+    if args.measurement_format:
+        config['data']['measurement_format'] = args.measurement_format
 
     # 添加方法名称到训练配置
     config['method_name'] = args.method

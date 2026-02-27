@@ -59,8 +59,21 @@ def parse_args():
         '--dataset',
         type=str,
         default='test',
-        choices=['test', 'test2017', 'test2023'],
+        choices=['test', 'test2017', 'test2023', 'ktc_full', 'ktc_eval'],
         help='Dataset to use for inference'
+    )
+    parser.add_argument(
+        '--ktc_level',
+        type=int,
+        default=1,
+        help='KTC challenge level for --dataset ktc_full/ktc_eval'
+    )
+    parser.add_argument(
+        '--measurement_format',
+        type=str,
+        default=None,
+        choices=['eim16', 'raw16x13', 'matrix32'],
+        help='Measurement format override'
     )
 
     # 输出相关
@@ -109,7 +122,7 @@ def parse_args():
     parser.add_argument(
         '--test_opt_physics',
         action='store_true',
-        help='Enable test-time optimization with differentiable physics backend (cnn only)'
+        help='Enable test-time optimization with differentiable physics backend (learning methods)'
     )
 
     parser.add_argument(
@@ -117,6 +130,13 @@ def parse_args():
         type=str,
         default='linearized_ktc',
         help='Physics backend type for test-time optimization'
+    )
+    parser.add_argument(
+        '--test_opt_mode',
+        type=str,
+        default='pixel',
+        choices=['pixel', 'contour_step'],
+        help='Optimization mode: pixel (legacy) or contour_step (boundary-focused)'
     )
 
     parser.add_argument(
@@ -138,6 +158,124 @@ def parse_args():
         type=float,
         default=1e-4,
         help='Smoothness regularization weight for test-time optimization'
+    )
+
+    parser.add_argument(
+        '--test_opt_lambda_anchor',
+        type=float,
+        default=5e-4,
+        help='Anchor regularization weight to keep sigma close to each relinearization anchor'
+    )
+
+    parser.add_argument(
+        '--test_opt_relinearize_every',
+        type=int,
+        default=20,
+        help='Recompute linearized physics backend every N steps (0 to disable)'
+    )
+
+    parser.add_argument(
+        '--test_opt_max_delta',
+        type=float,
+        default=0.25,
+        help='Trust-region clamp radius around initial sigma (0 to disable)'
+    )
+
+    parser.add_argument(
+        '--test_opt_lr_min_factor',
+        type=float,
+        default=0.1,
+        help='Minimum LR factor for cosine annealing during optimization'
+    )
+    parser.add_argument(
+        '--test_opt_seg_threshold',
+        type=float,
+        default=0.25,
+        help='Threshold for ternary initialization from sigma prediction'
+    )
+    parser.add_argument(
+        '--test_opt_bspline_grid',
+        type=int,
+        default=12,
+        help='Control grid size for contour displacement field'
+    )
+    parser.add_argument(
+        '--test_opt_tau_start',
+        type=float,
+        default=0.8,
+        help='Start temperature for soft step'
+    )
+    parser.add_argument(
+        '--test_opt_tau_end',
+        type=float,
+        default=0.35,
+        help='End temperature for soft step'
+    )
+    parser.add_argument(
+        '--test_opt_lambda_length',
+        type=float,
+        default=2e-3,
+        help='Contour length regularization weight'
+    )
+    parser.add_argument(
+        '--test_opt_lambda_area',
+        type=float,
+        default=5e-3,
+        help='Area consistency regularization weight'
+    )
+    parser.add_argument(
+        '--test_opt_lambda_anchor_shape',
+        type=float,
+        default=1e-3,
+        help='Shape control-point anchor regularization weight'
+    )
+    parser.add_argument(
+        '--test_opt_lambda_speckle',
+        type=float,
+        default=3e-3,
+        help='Background speckle suppression weight'
+    )
+    parser.add_argument(
+        '--test_opt_lambda_anchor_sigma',
+        type=float,
+        default=1e-3,
+        help='Stage-B sigma anchor regularization weight'
+    )
+    parser.add_argument(
+        '--test_opt_stage2_steps',
+        type=int,
+        default=60,
+        help='Stage-B refinement steps for contour_step mode'
+    )
+    parser.add_argument(
+        '--test_opt_min_component_ratio',
+        type=float,
+        default=0.0015,
+        help='Minimum connected-component ratio for ternary cleanup'
+    )
+    parser.add_argument(
+        '--test_opt_max_shift_px',
+        type=float,
+        default=8.0,
+        help='Maximum contour displacement in pixels'
+    )
+    parser.add_argument(
+        '--test_opt_value_bounds',
+        type=str,
+        default='-1.3,-0.2,-0.2,0.2,0.2,1.3',
+        help='Class value bounds: neg_l,neg_u,bg_l,bg_u,pos_l,pos_u'
+    )
+    parser.add_argument(
+        '--test_opt_save_ternary',
+        action='store_true',
+        default=True,
+        help='Save ternary optimized map (.npy)'
+    )
+    parser.add_argument(
+        '--test_opt_save_continuous',
+        action='store_true',
+        default=True,
+        help='Save continuous optimized map (.npy)'
     )
 
     parser.add_argument(
@@ -168,12 +306,14 @@ def main():
     config['data']['batch_size'] = args.batch_size
     config['training']['device'] = args.device
     config['method_name'] = args.method
+    if args.measurement_format is not None:
+        config['data']['measurement_format'] = args.measurement_format
 
     if args.test_opt_physics:
-        if args.method.lower() != 'cnn':
-            raise ValueError("--test_opt_physics currently supports only --method cnn")
+        if args.method.lower() in ['traditional', 'dbar']:
+            raise ValueError("--test_opt_physics does not support non-learning methods: traditional/dbar")
         if args.checkpoint is None:
-            default_checkpoint = Path('results') / 'cnn_01' / 'best_model.pth'
+            default_checkpoint = Path('results') / f'{args.method}_01' / 'best_model.pth'
             if not default_checkpoint.exists():
                 raise ValueError(
                     f"Default checkpoint not found: {default_checkpoint}. "
@@ -211,13 +351,20 @@ def main():
     logger.info(f"Inference method: {args.method}")
     logger.info(f"Checkpoint: {args.checkpoint}")
     logger.info(f"Dataset: {args.dataset}")
+    logger.info(f"KTC level: {args.ktc_level}")
+    logger.info(f"Measurement format: {config['data'].get('measurement_format', 'eim16')}")
     logger.info(f"Single sample index: {args.sample_idx}")
     logger.info(f"Test-time physics optimization: {args.test_opt_physics}")
     if args.test_opt_physics:
         logger.info(f"Physics backend: {args.test_opt_backend}")
         logger.info(
             f"Optimization params: steps={args.test_opt_steps}, lr={args.test_opt_lr}, "
-            f"lambda_smooth={args.test_opt_lambda_smooth}"
+            f"mode={args.test_opt_mode}, "
+            f"lambda_smooth={args.test_opt_lambda_smooth}, "
+            f"lambda_anchor={args.test_opt_lambda_anchor}, "
+            f"relinearize_every={args.test_opt_relinearize_every}, "
+            f"max_delta={args.test_opt_max_delta}, "
+            f"lr_min_factor={args.test_opt_lr_min_factor}"
         )
 
     # 创建数据模块
@@ -234,6 +381,14 @@ def main():
         dataloader = data_module.test2017_dataloader()
     elif args.dataset == 'test2023':
         dataloader = data_module.test2023_dataloader()
+    elif args.dataset == 'ktc_full':
+        if config['data'].get('measurement_format') != 'matrix32':
+            raise ValueError("--dataset ktc_full requires --measurement_format matrix32")
+        dataloader = data_module.ktc_full_dataloader(level=args.ktc_level)
+    elif args.dataset == 'ktc_eval':
+        if config['data'].get('measurement_format') != 'matrix32':
+            raise ValueError("--dataset ktc_eval requires --measurement_format matrix32")
+        dataloader = data_module.ktc_eval_dataloader(level=args.ktc_level)
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
 
@@ -342,8 +497,10 @@ def main():
         # 标准推理流程（其他方法）
         all_metrics = []
         if args.test_opt_physics:
+            if config['data'].get('measurement_format', 'eim16') != 'eim16':
+                raise ValueError("--test_opt_physics currently requires --measurement_format eim16")
             from src.methods.cnn.physics_backend import create_physics_backend
-            from src.methods.cnn.test_time_opt import optimize_sigma_with_backend, save_loss_curve
+            from src.methods.cnn.test_time_opt import optimize_sigma_with_backend, optimize_sigma_contour_step, save_loss_curve
 
         if args.sample_idx is not None:
             sample_measurements, sample_target = dataloader.dataset[args.sample_idx]
@@ -359,6 +516,11 @@ def main():
 
             # 初始推理（神经网络猜测）
             reconstruction_init = method.inference(measurements)
+            if args.test_opt_physics:
+                if reconstruction_init.dim() != 4 or reconstruction_init.shape[1] != 1:
+                    raise ValueError(
+                        f"--test_opt_physics expects method output shape [B,1,H,W], got {tuple(reconstruction_init.shape)}"
+                    )
 
             # 保存结果
             for i in range(reconstruction_init.shape[0]):
@@ -375,6 +537,12 @@ def main():
                 if args.test_opt_physics:
                     sigma_init = reconstruction_init[i:i+1]
                     meas_i = measurements[i:i+1]
+                    try:
+                        value_bounds = tuple(float(x.strip()) for x in str(args.test_opt_value_bounds).split(','))
+                    except ValueError as e:
+                        raise ValueError("--test_opt_value_bounds must be six comma-separated floats") from e
+                    if len(value_bounds) != 6:
+                        raise ValueError("--test_opt_value_bounds must contain 6 values")
 
                     backend = create_physics_backend(
                         args.test_opt_backend,
@@ -384,20 +552,55 @@ def main():
                         std=dataloader.dataset.std,
                         voltage=dataloader.dataset.voltage
                     )
-                    sigma_opt, loss_history = optimize_sigma_with_backend(
-                        sigma_init=sigma_init,
-                        measurements=meas_i,
-                        backend=backend,
-                        steps=args.test_opt_steps,
-                        lr=args.test_opt_lr,
-                        lambda_smooth=args.test_opt_lambda_smooth
-                    )
+                    if args.test_opt_mode == 'contour_step':
+                        sigma_opt, sigma_ternary, loss_history = optimize_sigma_contour_step(
+                            sigma_init=sigma_init,
+                            measurements=meas_i,
+                            backend=backend,
+                            steps=args.test_opt_steps,
+                            lr=args.test_opt_lr,
+                            seg_threshold=args.test_opt_seg_threshold,
+                            bspline_grid=args.test_opt_bspline_grid,
+                            tau_start=args.test_opt_tau_start,
+                            tau_end=args.test_opt_tau_end,
+                            max_shift_px=args.test_opt_max_shift_px,
+                            lambda_length=args.test_opt_lambda_length,
+                            lambda_area=args.test_opt_lambda_area,
+                            lambda_anchor_shape=args.test_opt_lambda_anchor_shape,
+                            lambda_speckle=args.test_opt_lambda_speckle,
+                            lambda_anchor_sigma=args.test_opt_lambda_anchor_sigma,
+                            relinearize_every=args.test_opt_relinearize_every,
+                            min_component_ratio=args.test_opt_min_component_ratio,
+                            lr_min_factor=args.test_opt_lr_min_factor,
+                            value_bounds=value_bounds,
+                            stage2_steps=args.test_opt_stage2_steps
+                        )
+                    else:
+                        sigma_opt, loss_history = optimize_sigma_with_backend(
+                            sigma_init=sigma_init,
+                            measurements=meas_i,
+                            backend=backend,
+                            steps=args.test_opt_steps,
+                            lr=args.test_opt_lr,
+                            lambda_smooth=args.test_opt_lambda_smooth,
+                            lambda_anchor=args.test_opt_lambda_anchor,
+                            relinearize_every=args.test_opt_relinearize_every,
+                            max_delta=args.test_opt_max_delta,
+                            lr_min_factor=args.test_opt_lr_min_factor
+                        )
+                        sigma_ternary = None
                     recon = sigma_opt[0, 0].detach().cpu().numpy()
 
                     if args.test_opt_save_curve:
                         curve_json = output_dir / f"loss_curve_{filename_without_ext}.json"
                         curve_png = output_dir / f"loss_curve_{filename_without_ext}.png"
                         save_loss_curve(loss_history, curve_json, curve_png)
+                    if args.test_opt_save_continuous:
+                        npy_path = output_dir / f"sigma_continuous_{filename_without_ext}.npy"
+                        np.save(npy_path, recon.astype(np.float32))
+                    if args.test_opt_save_ternary and sigma_ternary is not None:
+                        ternary_path = output_dir / f"sigma_ternary_{filename_without_ext}.npy"
+                        np.save(ternary_path, sigma_ternary[0, 0].detach().cpu().numpy().astype(np.float32))
                     nn_pred_for_plot = sigma_init[0, 0].detach().cpu().numpy()
                 else:
                     recon = reconstruction_init[i, 0].detach().cpu().numpy()

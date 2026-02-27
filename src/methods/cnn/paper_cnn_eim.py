@@ -98,9 +98,23 @@ class ImprovedPaperCNNEIM(nn.Module):
     通过调整最后一层反卷积的参数实现不同输出尺寸
     """
 
-    def __init__(self, output_size=64):
+    def __init__(self, output_size=64, input_mode='auto'):
         super(ImprovedPaperCNNEIM, self).__init__()
         self.output_size = output_size
+        self.input_mode = input_mode
+
+        # 32电极协议输入适配层（31x76 -> 16x16）
+        # 通过可学习卷积 + 自适应池化在网络内部完成协议接入，不在方法层做插值。
+        self.protocol32_adapter = nn.Sequential(
+            nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(16),
+            nn.PReLU(),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(32),
+            nn.PReLU(),
+            nn.AdaptiveAvgPool2d((16, 16)),
+            nn.Conv2d(32, 1, kernel_size=1, stride=1, padding=0),
+        )
 
         # 编码器（下采样路径）- 保持不变
         self.encoder = nn.Sequential(
@@ -180,6 +194,14 @@ class ImprovedPaperCNNEIM(nn.Module):
         Returns:
             out: [B, 1, output_size, output_size] 重建图像
         """
+        if self.input_mode == 'matrix32' or x.shape[-2:] == (31, 76):
+            x = self.protocol32_adapter(x)
+        elif x.shape[-2:] != (16, 16):
+            raise ValueError(
+                f"Unsupported input shape for paper_cnn_eim: {tuple(x.shape)}. "
+                "Expected [B,1,16,16] or [B,1,31,76]."
+            )
+
         encoded = self.encoder(x)  # [B, 256, 2, 2]
         decoded = self.decoder(encoded)  # [B, 1, output_size, output_size]
         return decoded
@@ -197,11 +219,15 @@ def create_cnn_eim(config):
         模型实例
     """
     output_size = config.get('model', {}).get('output_size', 64)
+    input_mode = config.get('model', {}).get(
+        'input_mode',
+        'matrix32' if config.get('data', {}).get('measurement_format') == 'matrix32' else 'eim16'
+    )
 
     if output_size == 32:
         return PaperCNNEIM()
     elif output_size in [64, 128]:
-        return ImprovedPaperCNNEIM(output_size=output_size)
+        return ImprovedPaperCNNEIM(output_size=output_size, input_mode=input_mode)
     else:
         raise ValueError(f"Unsupported output_size: {output_size}. Supported: 32, 64, 128")
 

@@ -74,3 +74,150 @@
 
   - 日常训练后推理与结果导出：用 src/inference.py
   - 想跑 KTC 评分体系和 level 报告：才用 src/evaluate.py
+
+
+
+
+python src/generate_simdata_32.py --output_dir data32 --num_train 40000 --num_valid 5000 --workers 8
+================================================================================
+Generate 32-electrode simulated dataset
+================================================================================
+Output dir: data32
+Train samples: 40000
+Valid samples: 5000
+Noise: on (std1=0.1, std2=0.0)
+Protocol: challenge76
+Use evaluation pattern: True
+Workers: 8
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+D:\020_Software\M\miniconda\Miniconda3\lib\site-packages\scipy\sparse\_index.py:168: SparseEfficiencyWarning: Changing the sparsity structure of a csr_matrix is expensive. lil and dok are more efficient.
+  self._set_intXint(row, col, x.flat[0])
+Measurement dimension: 2356
+Injection patterns: 76
+Measurements per injection: 31
+Generating train:   0%|                                                   | 0/40000 [00:00<?, ?it/s]Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Generating train: 100%|████████████████████████████████████| 40000/40000 [12:55:39<00:00,  1.16s/it]
+Generating valid:   0%|                                                    | 0/5000 [00:00<?, ?it/s]Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+Loaded evaluation measurement pattern:
+  Measurements per injection: 31
+  Injection patterns: 76
+  Total measurements: 2356
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Loaded evaluation measurement pattern:
+  Injection patterns: 76
+  Measurements per injection: 31
+  Total measurements: 2356
+Generating valid: 100%|███████████████████████████████████████| 5000/5000 [1:43:22<00:00,  1.24s/it]
+--------------------------------------------------------------------------------
+Done. Total samples: 45000
+Total time: 52744.11s
+Average per sample: 1.1721s
+Saved to: data32
+
+
+• 可以按下面流程直接做。                                                                                                                                                
+                                                                                                                                                                        
+  1. 在 data32 上训练（你刚生成的仿真集）                                                                                                                               
+                                                                                                                                                                        
+  python main.py train --method fno --config src/configs/fno_config.yaml --data_dir data32 --num_epochs 200 --batch_size 64 --result_dir fno_sim32                      
+                                                                                                                                                                        
+  或 CNN：                                                                                                                                                              
+                                                                                                                                                                        
+  python main.py train --method cnn --config src/configs/cnn_config.yaml --data_dir data32 --num_epochs 200 --batch_size 64 --result_dir cnn_sim32                      
+                                                                                                                                                                        
+  训练完成后权重在：                                                                                                                                                    
+                                                                                                                                                                        
+  - results/fno_sim32_XX/best_model.pth                                                                                                                                 
+  - results/fno_sim32_XX/last.pth                                                                                                                                       
+                                                                                                                                                                        
+  ———                                                                                                                                                                   
+                                                                                                                                                                        
+  2. 在 KTC2023 EvaluationData_full 上测试（对应 test2023）                                                                                                             
+                                                                                                                                                                        
+  python main.py inference --method fno --config src/configs/fno_config.yaml --checkpoint results/fno_sim32_XX/best_model.pth --data_dir data --dataset test2023        
+  --output_dir fno_sim32_test2023                                                                                                                                       
+                                                                                                                                                                        
+  ———                                                                                                                                                                   
+                                                                                                                                                                        
+  3. 在 KTC2023 EvaluationData（删测量版本）上测试（对应 test2017）                                                                                                     
+                                                                                                                                                                        
+  python main.py inference --method fno --config src/configs/fno_config.yaml --checkpoint results/fno_sim32_XX/best_model.pth --data_dir data --dataset test2017        
+  --output_dir fno_sim32_test2017                                                                                                                                       
+                                                                                                                                                                        
+  ———                                                                                                                                                                   
+                                                                                                                                                                        
+  4. 只测单个样本（快速调参）                                                                                                                                           
+                                                                                                                                                                        
+  python main.py inference --method fno --config src/configs/fno_config.yaml --checkpoint results/fno_sim32_XX/best_model.pth --data_dir data --dataset test2023        
+  --sample_idx 1 --output_dir fno_sim32_test2023_single                                                                                                                 
+                                                                                                                                                                        
+  ———                                                                                                                                                                   
+                                                                                                                                                                        
+  5. 若要开启物理可微优化（已支持通用方法）                                                                                                                             
+                                                                                                                                                                        
+  python main.py inference --method fno --config src/configs/fno_config.yaml --checkpoint results/fno_sim32_XX/best_model.pth --data_dir data --dataset test2023        
+  --sample_idx 1 --test_opt_physics --test_opt_mode contour_step --test_opt_steps 200 --test_opt_stage2_steps 30 --output_dir fno_sim32_test2023_opt                    
+                                                                                                                                                                        
+  ———                                                                                                                                                                   
+                                                                                                                                                                        
+  说明：                                                                                                                                                                
+                                                                                                                                                                        
+  - 你训练用的是 data32，但测试 KTC 官方数据要用 --data_dir data，因为 test2023/test2017 在 data/ 下。                                                                  
+  - test2023 对应 EvaluationData_full，test2017 对应 EvaluationData。                                                                                                   
+ 

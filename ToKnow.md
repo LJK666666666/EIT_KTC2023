@@ -20,7 +20,7 @@
 - 仅看`U`域相关性可能偏乐观，必须同时看`deltaU = U-Uref`域误差。
 ### 6) 参考实现与资料
 - 官方代码示例：`src/ktc_methods`。
-- 冠军方案：`paper/other/DATA-DRIVEN APPROACHES FOR ELECTRICAL IMPEDANCE__TOMOGRAPHY IMAGE SEGMENTATION FROM PARTIAL__BOUNDAR.pdf`，代码：`programs/ktc2023_postprocessing`、`programs/ktc2023_fcunet`、`programs/ktc2023_conditional_diffusion`。
+- 冠军方案：`paper/other/DATA-DRIVEN APPROACHES FOR ELECTRICAL IMPEDANCE__TOMOGRAPHY IMAGE SEGMENTATION FROM PARTIAL__BOUNDAR.pdf` `paper/other/arXiv-2407.01559v1/`，代码：`programs/ktc2023_postprocessing`、`programs/ktc2023_fcunet`、`programs/ktc2023_conditional_diffusion`。
 - 亚军代码：`programs/KTC2023-ABC2`。
 - 季军代码：`programs/KTC2023-CUQI9`。
 - CDEIT论文：`paper/other/A Conditional Diffusion Model for Electrical__Impedance Tomography Image Reconstruction.pdf`，代码：`programs/CDEIT`。

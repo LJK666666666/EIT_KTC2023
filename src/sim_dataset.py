@@ -134,6 +134,9 @@ class SimulatedEITDataset(Dataset):
         pixcenter_x = np.linspace(-0.115 + pixwidth / 2, 0.115 - pixwidth / 2 + pixwidth, 256)
         pixcenter_y = pixcenter_x
         self.X, self.Y = np.meshgrid(pixcenter_x, pixcenter_y)
+        # 更丰富的形状分布（概率和为1）
+        self.shape_types = ["polygon", "circle", "rectangle", "star", "heart", "wave_blob", "crescent"]
+        self.shape_probs = [0.32, 0.14, 0.12, 0.14, 0.10, 0.10, 0.08]
 
     def _load_evaluation_pattern(self):
         """加载评估数据的测量模式"""
@@ -193,7 +196,7 @@ class SimulatedEITDataset(Dataset):
         return phantom_pix, measurements
 
     def _create_phantoms(self, min_inclusions=1, max_inclusions=4,
-                        max_iter=80, distance_between=25, p=[0.7, 0.15, 0.15]):
+                        max_iter=80, distance_between=25):
         """
         创建随机的导电率分布（类别标签：0=背景, 1=低电导率, 2=高电导率）
 
@@ -202,7 +205,7 @@ class SimulatedEITDataset(Dataset):
             max_inclusions: 最多包含物数量
             max_iter: 最大迭代次数
             distance_between: 包含物之间的最小距离（像素）
-            p: 形状概率分布 [多边形, 圆形, 矩形]
+            形状概率由 self.shape_types/self.shape_probs 控制
 
         Returns:
             sigma_pix: 256x256的导电率分布数组
@@ -219,7 +222,7 @@ class SimulatedEITDataset(Dataset):
 
         iter_count = 0
         while len(circle_list) < num_forms:
-            object_type = np.random.choice(["polygon", "circle", "rectangle"], p=p)
+            object_type = np.random.choice(self.shape_types, p=self.shape_probs)
 
             if object_type == "rectangle":
                 lower_x = 50 + np.random.randint(-24, 24)
@@ -265,6 +268,39 @@ class SimulatedEITDataset(Dataset):
                         num_vertices=num_vertices)
                     fill_val = 1 if np.random.rand() < 0.5 else 2
                     draw.polygon(vertices, fill=fill_val)
+                elif object_type == "star":
+                    points = self._generate_star(
+                        center=(center_x, center_y),
+                        outer_radius=avg_radius,
+                        inner_radius_ratio=np.random.uniform(0.38, 0.55),
+                        num_points=np.random.randint(5, 8)
+                    )
+                    fill_val = 1 if np.random.rand() < 0.5 else 2
+                    draw.polygon(points, fill=fill_val)
+                elif object_type == "heart":
+                    points = self._generate_heart(
+                        center=(center_x, center_y),
+                        radius=avg_radius,
+                        n_points=140
+                    )
+                    fill_val = 1 if np.random.rand() < 0.5 else 2
+                    draw.polygon(points, fill=fill_val)
+                elif object_type == "wave_blob":
+                    points = self._generate_wave_blob(
+                        center=(center_x, center_y),
+                        base_radius=avg_radius,
+                        n_points=120
+                    )
+                    fill_val = 1 if np.random.rand() < 0.5 else 2
+                    draw.polygon(points, fill=fill_val)
+                elif object_type == "crescent":
+                    fill_val = 1 if np.random.rand() < 0.5 else 2
+                    self._draw_crescent(
+                        draw=draw,
+                        center=(center_x, center_y),
+                        radius=avg_radius,
+                        fill_val=fill_val
+                    )
 
                 circle_list.append((center_x, center_y, avg_radius))
 
@@ -281,6 +317,81 @@ class SimulatedEITDataset(Dataset):
                                    cval=0.0, reshape=False, order=0))
 
         return sigma_pix
+
+    def _generate_star(self, center: Tuple[float, float], outer_radius: float,
+                       inner_radius_ratio: float = 0.45, num_points: int = 5) -> List[Tuple[float, float]]:
+        """生成星形顶点。"""
+        cx, cy = center
+        inner_radius = outer_radius * inner_radius_ratio
+        points = []
+        start_angle = random.uniform(0, 2 * math.pi)
+        for i in range(num_points * 2):
+            r = outer_radius if i % 2 == 0 else inner_radius
+            theta = start_angle + i * math.pi / num_points
+            x = cx + r * math.cos(theta)
+            y = cy + r * math.sin(theta)
+            points.append((x, y))
+        return points
+
+    def _generate_heart(self, center: Tuple[float, float], radius: float,
+                        n_points: int = 120) -> List[Tuple[float, float]]:
+        """用参数曲线生成心形边界点。"""
+        cx, cy = center
+        points = []
+        angle = random.uniform(0, 2 * math.pi)
+        ca = math.cos(angle)
+        sa = math.sin(angle)
+        scale = radius / 18.0
+        for t in np.linspace(0, 2 * math.pi, n_points, endpoint=False):
+            x0 = 16 * (math.sin(t) ** 3)
+            y0 = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
+            x1 = x0 * scale
+            y1 = -y0 * scale
+            x = cx + x1 * ca - y1 * sa
+            y = cy + x1 * sa + y1 * ca
+            points.append((x, y))
+        return points
+
+    def _generate_wave_blob(self, center: Tuple[float, float], base_radius: float,
+                            n_points: int = 120) -> List[Tuple[float, float]]:
+        """生成波浪边界的不规则曲线形状。"""
+        cx, cy = center
+        points = []
+        phase1 = random.uniform(0, 2 * math.pi)
+        phase2 = random.uniform(0, 2 * math.pi)
+        phase3 = random.uniform(0, 2 * math.pi)
+        rot = random.uniform(0, 2 * math.pi)
+        cr = math.cos(rot)
+        sr = math.sin(rot)
+        for t in np.linspace(0, 2 * math.pi, n_points, endpoint=False):
+            modulation = (
+                1.0
+                + 0.20 * math.sin(3 * t + phase1)
+                + 0.12 * math.sin(5 * t + phase2)
+                + 0.08 * math.sin(7 * t + phase3)
+            )
+            r = base_radius * max(0.55, modulation)
+            x0 = r * math.cos(t)
+            y0 = r * math.sin(t)
+            x = cx + x0 * cr - y0 * sr
+            y = cy + x0 * sr + y0 * cr
+            points.append((x, y))
+        return points
+
+    def _draw_crescent(self, draw: ImageDraw.ImageDraw, center: Tuple[float, float],
+                       radius: float, fill_val: int) -> None:
+        """绘制月牙形状：大圆减去偏移小圆。"""
+        cx, cy = center
+        r_outer = radius
+        r_inner = radius * random.uniform(0.62, 0.78)
+        shift = radius * random.uniform(0.25, 0.42)
+        angle = random.uniform(0, 2 * math.pi)
+        dx = shift * math.cos(angle)
+        dy = shift * math.sin(angle)
+        outer_box = (cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer)
+        inner_box = (cx - r_inner + dx, cy - r_inner + dy, cx + r_inner + dx, cy + r_inner + dy)
+        draw.ellipse(outer_box, fill=fill_val)
+        draw.ellipse(inner_box, fill=0)
 
     def _generate_polygon(self, center: Tuple[float, float], avg_radius: float,
                          irregularity: float, spikiness: float,

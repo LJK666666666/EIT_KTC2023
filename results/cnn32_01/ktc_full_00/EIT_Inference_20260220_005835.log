@@ -1,0 +1,23 @@
+2026-02-20 00:58:35 - EIT_Inference - INFO - Output directory: results\cnn32_01\ktc_full_00
+2026-02-20 00:58:35 - EIT_Inference - INFO - Inference method: cnn
+2026-02-20 00:58:35 - EIT_Inference - INFO - Checkpoint: results/cnn32_01/best_model.pth
+2026-02-20 00:58:35 - EIT_Inference - INFO - Dataset: ktc_full
+2026-02-20 00:58:35 - EIT_Inference - INFO - KTC level: 1
+2026-02-20 00:58:35 - EIT_Inference - INFO - Measurement format: matrix32
+2026-02-20 00:58:35 - EIT_Inference - INFO - Single sample index: None
+2026-02-20 00:58:35 - EIT_Inference - INFO - Test-time physics optimization: False
+2026-02-20 00:58:35 - EIT_Inference - INFO - Setting up data module...
+2026-02-20 00:58:35 - EIT_Inference - INFO - Dataset size: 3
+2026-02-20 00:58:35 - EIT_Inference - INFO - Creating cnn method...
+2026-02-20 00:58:36 - EIT_Inference - INFO - Loading checkpoint from: results/cnn32_01/best_model.pth
+2026-02-20 00:58:36 - EIT_Inference - INFO - Starting inference...
+2026-02-20 00:58:36 - EIT_Inference - INFO - Processing: data1.mat -> reconstruction_data1
+2026-02-20 00:58:37 - EIT_Inference - INFO - Processing: data2.mat -> reconstruction_data2
+2026-02-20 00:58:38 - EIT_Inference - INFO - Processing: data3.mat -> reconstruction_data3
+2026-02-20 00:58:38 - EIT_Inference - INFO - Average metrics:
+2026-02-20 00:58:38 - EIT_Inference - INFO -   mse: 0.181664
+2026-02-20 00:58:38 - EIT_Inference - INFO -   mae: 0.192603
+2026-02-20 00:58:38 - EIT_Inference - INFO -   psnr: 8.186251
+2026-02-20 00:58:38 - EIT_Inference - INFO -   ssim: 0.477702
+2026-02-20 00:58:38 - EIT_Inference - INFO -   relative_error: 1.209105
+2026-02-20 00:58:38 - EIT_Inference - INFO - Inference completed! Results saved to: results\cnn32_01\ktc_full_00

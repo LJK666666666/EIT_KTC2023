@@ -1,0 +1,21 @@
+2026-02-18 22:30:54 - EIT_Inference - INFO - Output directory: results\fno_00\test2023_02
+2026-02-18 22:30:54 - EIT_Inference - INFO - Inference method: fno
+2026-02-18 22:30:54 - EIT_Inference - INFO - Checkpoint: results/fno_00/best_model.pth
+2026-02-18 22:30:54 - EIT_Inference - INFO - Dataset: test2023
+2026-02-18 22:30:54 - EIT_Inference - INFO - Single sample index: 1
+2026-02-18 22:30:54 - EIT_Inference - INFO - Test-time physics optimization: True
+2026-02-18 22:30:54 - EIT_Inference - INFO - Physics backend: linearized_ktc
+2026-02-18 22:30:54 - EIT_Inference - INFO - Optimization params: steps=200, lr=0.01, mode=contour_step, lambda_smooth=0.0001, lambda_anchor=0.0005, relinearize_every=20, max_delta=0.25, lr_min_factor=0.1
+2026-02-18 22:30:54 - EIT_Inference - INFO - Setting up data module...
+2026-02-18 22:30:54 - EIT_Inference - INFO - Dataset size: 25
+2026-02-18 22:30:54 - EIT_Inference - INFO - Creating fno method...
+2026-02-18 22:30:56 - EIT_Inference - INFO - Loading checkpoint from: results/fno_00/best_model.pth
+2026-02-18 22:30:56 - EIT_Inference - INFO - Starting inference...
+2026-02-18 22:30:56 - EIT_Inference - INFO - Processing: 0_2.npz -> reconstruction_0_2
+2026-02-18 22:31:20 - EIT_Inference - INFO - Average metrics:
+2026-02-18 22:31:20 - EIT_Inference - INFO -   mse: 0.100210
+2026-02-18 22:31:20 - EIT_Inference - INFO -   mae: 0.152768
+2026-02-18 22:31:20 - EIT_Inference - INFO -   psnr: 9.990874
+2026-02-18 22:31:20 - EIT_Inference - INFO -   ssim: 0.196182
+2026-02-18 22:31:20 - EIT_Inference - INFO -   relative_error: 0.957657
+2026-02-18 22:31:20 - EIT_Inference - INFO - Inference completed! Results saved to: results\fno_00\test2023_02

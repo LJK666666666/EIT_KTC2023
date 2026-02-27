@@ -8,6 +8,59 @@ import torch
 from pathlib import Path
 
 
+def _extract_training_series(history: dict):
+    """
+    从 history 中提取按 epoch 对齐的 train/val/lr 序列。
+    优先使用 epoch_records；若不存在则回退旧格式。
+    """
+    epoch_records = history.get('epoch_records', [])
+    if isinstance(epoch_records, list) and len(epoch_records) > 0:
+        epochs = [int(item.get('epoch', idx + 1)) for idx, item in enumerate(epoch_records)]
+        train_loss = [item.get('train_loss', np.nan) for item in epoch_records]
+        val_loss = [item.get('val_loss', np.nan) for item in epoch_records]
+        learning_rate = [item.get('learning_rate', np.nan) for item in epoch_records]
+        return epochs, train_loss, val_loss, learning_rate
+
+    train_loss = history.get('train_loss', [])
+    val_loss = history.get('val_loss', [])
+    learning_rate = history.get('learning_rate', [])
+    max_len = max(len(train_loss), len(val_loss), len(learning_rate), 0)
+    epochs = list(range(1, max_len + 1))
+    return epochs, train_loss, val_loss, learning_rate
+
+
+def _extract_metrics_series(
+    metrics_list: Optional[List[dict]] = None,
+    history: Optional[dict] = None
+):
+    """
+    提取指标序列，返回 (epochs, metrics_seq)。
+    优先从 history['epoch_records'][].val_metrics 提取；否则回退 metrics_list。
+    """
+    if history is not None:
+        epoch_records = history.get('epoch_records', [])
+        if isinstance(epoch_records, list) and len(epoch_records) > 0:
+            epochs = []
+            metrics_seq = []
+            for idx, item in enumerate(epoch_records):
+                metrics = item.get('val_metrics', {})
+                if isinstance(metrics, dict) and len(metrics) > 0:
+                    epochs.append(int(item.get('epoch', idx + 1)))
+                    metrics_seq.append(metrics)
+            if len(metrics_seq) > 0:
+                return epochs, metrics_seq
+
+        val_metrics = history.get('val_metrics', [])
+        if isinstance(val_metrics, list) and len(val_metrics) > 0:
+            epochs = list(range(1, len(val_metrics) + 1))
+            return epochs, val_metrics
+
+    if metrics_list is None or len(metrics_list) == 0:
+        return [], []
+    epochs = list(range(1, len(metrics_list) + 1))
+    return epochs, metrics_list
+
+
 def plot_reconstruction(
     reconstruction: np.ndarray,
     ground_truth: Optional[np.ndarray] = None,
@@ -111,11 +164,14 @@ def plot_training_curves(
         figsize: 图像大小
     """
     fig, axes = plt.subplots(1, 2, figsize=figsize)
+    epochs, train_loss, val_loss, learning_rate = _extract_training_series(history)
 
     # 损失曲线
-    if 'train_loss' in history and 'val_loss' in history:
-        axes[0].plot(history['train_loss'], label='Train Loss')
-        axes[0].plot(history['val_loss'], label='Val Loss')
+    if len(train_loss) > 0 or len(val_loss) > 0:
+        if len(train_loss) > 0:
+            axes[0].plot(epochs[:len(train_loss)], train_loss, label='Train Loss')
+        if len(val_loss) > 0:
+            axes[0].plot(epochs[:len(val_loss)], val_loss, label='Val Loss')
         axes[0].set_xlabel('Epoch')
         axes[0].set_ylabel('Loss')
         axes[0].set_title('Training and Validation Loss')
@@ -123,8 +179,8 @@ def plot_training_curves(
         axes[0].grid(True, alpha=0.3)
 
     # 学习率曲线
-    if 'learning_rate' in history:
-        axes[1].plot(history['learning_rate'])
+    if len(learning_rate) > 0:
+        axes[1].plot(epochs[:len(learning_rate)], learning_rate)
         axes[1].set_xlabel('Epoch')
         axes[1].set_ylabel('Learning Rate')
         axes[1].set_title('Learning Rate Schedule')
@@ -142,7 +198,8 @@ def plot_training_curves(
 
 
 def plot_metrics(
-    metrics_list: List[dict],
+    metrics_list: Optional[List[dict]] = None,
+    history: Optional[dict] = None,
     save_path: Optional[str] = None,
     figsize: Tuple[int, int] = (12, 8)
 ):
@@ -150,15 +207,17 @@ def plot_metrics(
     绘制评估指标曲线
 
     Args:
-        metrics_list: 指标字典列表
+        metrics_list: 指标字典列表（旧接口）
+        history: 训练历史字典（新接口，支持 epoch_records）
         save_path: 保存路径
         figsize: 图像大小
     """
-    if not metrics_list:
+    epochs, metrics_seq = _extract_metrics_series(metrics_list=metrics_list, history=history)
+    if len(metrics_seq) == 0:
         return
 
     # 提取所有指标名称
-    metric_names = list(metrics_list[0].keys())
+    metric_names = list(metrics_seq[0].keys())
     num_metrics = len(metric_names)
 
     # 创建子图
@@ -168,8 +227,8 @@ def plot_metrics(
 
     # 绘制每个指标
     for idx, name in enumerate(metric_names):
-        values = [m[name] for m in metrics_list]
-        axes[idx].plot(values, marker='o')
+        values = [m.get(name, np.nan) for m in metrics_seq]
+        axes[idx].plot(epochs, values, marker='o')
         axes[idx].set_xlabel('Epoch')
         axes[idx].set_ylabel(name.upper())
         axes[idx].set_title(f'{name.upper()} over Epochs')

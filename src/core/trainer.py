@@ -76,7 +76,8 @@ class UnifiedTrainer:
             'train_loss': [],
             'val_loss': [],
             'learning_rate': [],
-            'val_metrics': []
+            'val_metrics': [],
+            'epoch_records': []
         }
 
         # 优化器和调度器
@@ -119,6 +120,25 @@ class UnifiedTrainer:
                 if key in saved_history:
                     self.history[key] = saved_history[key][:self.start_epoch]
 
+            # 兼容旧版 history.json（没有 epoch_records）
+            if len(self.history['epoch_records']) == 0:
+                rebuilt_records = []
+                for i in range(len(self.history['train_loss'])):
+                    lr = None
+                    if i < len(self.history['learning_rate']):
+                        lr = self.history['learning_rate'][i]
+                    metrics = {}
+                    if i < len(self.history['val_metrics']):
+                        metrics = self.history['val_metrics'][i]
+                    rebuilt_records.append({
+                        'epoch': i + 1,
+                        'train_loss': self.history['train_loss'][i],
+                        'val_loss': self.history['val_loss'][i],
+                        'learning_rate': lr,
+                        'val_metrics': metrics
+                    })
+                self.history['epoch_records'] = rebuilt_records
+
             # 找到历史中的最佳验证损失
             if self.history['val_loss']:
                 self.best_val_loss = min(self.history['val_loss'])
@@ -149,6 +169,17 @@ class UnifiedTrainer:
             if self.optimizer:
                 current_lr = self.optimizer.param_groups[0]['lr']
                 self.history['learning_rate'].append(current_lr)
+            else:
+                current_lr = None
+
+            epoch_record = {
+                'epoch': epoch + 1,
+                'train_loss': train_loss,
+                'val_loss': val_loss,
+                'learning_rate': current_lr,
+                'val_metrics': val_metrics if val_metrics else {}
+            }
+            self.history['epoch_records'].append(epoch_record)
 
             # 打印信息
             print(f"Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
@@ -278,4 +309,4 @@ class UnifiedTrainer:
     def _save_history(self):
         """保存训练历史"""
         with open(self.result_dir / 'history.json', 'w') as f:
-            json.dump(self.history, f, indent=2)
+            json.dump(self.history, f, indent=2, ensure_ascii=False)

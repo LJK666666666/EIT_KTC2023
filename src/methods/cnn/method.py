@@ -5,7 +5,6 @@ CNN 重建方法实现
 from typing import Dict, Tuple, Optional
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from ...core.base import BaseReconstructionMethod
 from .unet import create_unet
